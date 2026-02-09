@@ -1,0 +1,45 @@
+# Environment variables
+.env
+.env.*
+*.env
+
+# Dependencies
+node_modules/
+
+# Builds
+dist/
+build/
+
+# Logs
+*.log
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Coverage
+coverage/
+
+# Misc
+.tmp/
+
+# Node / tooling
+node_modules/
+
+# Generated SDKs (optional)
+sdk/
+clients/
+
+# Build artefacts
+dist/
+build/
+
+# Env
+.env
+.env.*
+
+# Logs
+*.log
