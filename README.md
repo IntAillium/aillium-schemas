@@ -8,7 +8,7 @@
 - Event schemas
 - Usage/metering schemas
 - OpenAPI specifications
-- Shared SDK generation (future)
+- Shared SDK generation (TypeScript + Python)
 
 ## What This Repo Does NOT Do
 - No business logic
@@ -18,8 +18,15 @@
 ## Architecture Role
 Contracts & Interfaces
 
+## Packages
+- `@aillium/schemas` (TypeScript): Zod validators, TypeScript interfaces, API client types.
+- `aillium-schemas` (Python): Pydantic models, API client types.
+
+## Specs
+- OpenAPI 3.0 spec for aillium-core lives in `specs/openapi/aillium-core.yaml`.
+
 ## Usage
-All services must conform to schemas defined here.
+All services must conform to schemas defined here and consume generated artifacts.
 
 ## Licence
 Apache 2.0
