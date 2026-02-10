@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/executor/executor.request.schema.json",
+  "title": "Executor Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractType",
+    "schemaVersion",
+    "requestId",
+    "traceId",
+    "tenantId",
+    "createdAt",
+    "input"
+  ],
+  "properties": {
+    "contractType": {
+      "const": "executor.request"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^1\\.0\\.0$"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "traceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tenantId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executorType": {
+      "type": "string",
+      "enum": ["generic", "agent", "tool", "job"]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "deadlineAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policyRef"],
+      "properties": {
+        "policyRef": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maxRuntimeMs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxCostUnits": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["taskType", "payload"],
+      "properties": {
+        "taskType": {
+          "type": "string",
+          "minLength": 1
+        },
+        "payload": {
+          "type": "object"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "$ref": "executor.common.schema.json#/$defs/artifactRef"
+          }
+        },
+        "context": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
