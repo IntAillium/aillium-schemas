@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  title: Aillium Core API
+  version: 0.1.0
+  description: Canonical API contract for aillium-core.
+servers:
+  - url: https://api.aillium.io
+paths:
+  /tasks:
+    post:
+      summary: Create a task
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+  /tasks/{task_id}:
+    get:
+      summary: Get a task
+      operationId: getTask
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+  /tasks/{task_id}/approve:
+    post:
+      summary: Approve a task
+      operationId: approveTask
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task approved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+  /tasks/{task_id}/cancel:
+    post:
+      summary: Cancel a task
+      operationId: cancelTask
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+  /tasks/{task_id}/events:
+    get:
+      summary: List task events
+      operationId: listTaskEvents
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StepUpdate'
+        '404':
+          description: Task not found
+components:
+  schemas:
+    BudgetCaps:
+      type: object
+      required:
+        - max_usd
+        - max_tokens
+        - enforcement
+      properties:
+        max_usd:
+          type: number
+        max_tokens:
+          type: number
+          nullable: true
+        enforcement:
+          type: string
+          enum: [HARD, SOFT]
+      additionalProperties: false
+    RiskLevel:
+      type: string
+      enum: [LOW, HIGH, CRITICAL]
+    TaskState:
+      type: string
+      enum: [PENDING, NEEDS_APPROVAL, RUNNING, COMPLETED, FAILED, CANCELLED]
+    TaskCreate:
+      type: object
+      required:
+        - tenant_id
+        - device_id
+        - budget_caps
+        - allowed_tools
+        - risk_level
+      properties:
+        tenant_id:
+          type: string
+        device_id:
+          type: string
+        budget_caps:
+          $ref: '#/components/schemas/BudgetCaps'
+        allowed_tools:
+          type: array
+          items:
+            type: string
+        risk_level:
+          $ref: '#/components/schemas/RiskLevel'
+      additionalProperties: false
+    Task:
+      type: object
+      required:
+        - task_id
+        - tenant_id
+        - device_id
+        - budget_caps
+        - allowed_tools
+        - risk_level
+        - state
+      properties:
+        task_id:
+          type: string
+        tenant_id:
+          type: string
+        device_id:
+          type: string
+        budget_caps:
+          $ref: '#/components/schemas/BudgetCaps'
+        allowed_tools:
+          type: array
+          items:
+            type: string
+        risk_level:
+          $ref: '#/components/schemas/RiskLevel'
+        state:
+          $ref: '#/components/schemas/TaskState'
+      additionalProperties: false
+    StepUpdate:
+      type: object
+      required:
+        - task_id
+        - step_index
+        - description
+        - timestamp
+        - status
+      properties:
+        task_id:
+          type: string
+        step_index:
+          type: integer
+          format: int32
+          minimum: 0
+        description:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [INFO, WARNING, ERROR]
+      additionalProperties: false
