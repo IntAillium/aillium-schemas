@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/executor/executor.response.schema.json",
+  "title": "Executor Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractType",
+    "schemaVersion",
+    "requestId",
+    "responseId",
+    "traceId",
+    "completedAt",
+    "status",
+    "result"
+  ],
+  "properties": {
+    "contractType": {
+      "const": "executor.response"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^1\\.0\\.0$"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "responseId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "traceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executorType": {
+      "type": "string",
+      "enum": ["generic", "agent", "tool", "job"]
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["succeeded", "failed", "cancelled", "timed_out"]
+    },
+    "timing": {
+      "$ref": "executor.common.schema.json#/$defs/timing"
+    },
+    "cost": {
+      "$ref": "executor.common.schema.json#/$defs/cost"
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["output"],
+      "properties": {
+        "output": {
+          "type": "object"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "executor.common.schema.json#/$defs/artifactRef"
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "$ref": "executor.common.schema.json#/$defs/message"
+          }
+        }
+      }
+    },
+    "error": {
+      "$ref": "executor.common.schema.json#/$defs/error"
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "succeeded"
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": ["error"]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": ["failed", "cancelled", "timed_out"]
+          }
+        }
+      },
+      "then": {
+        "required": ["error"]
+      }
+    }
+  ]
+}
