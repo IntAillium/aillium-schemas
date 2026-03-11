@@ -1,0 +1,10 @@
+cat > package.json <<'EOF'
+{
+  "name": "aillium-schemas-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/typescript",
+    "packages/python"
+  ]
+}
+EOF
