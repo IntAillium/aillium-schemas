@@ -6,6 +6,25 @@
     "packages/typescript",
     "packages/python"
   ],
+  "main": "packages/typescript/dist/index.js",
+  "types": "packages/typescript/dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./packages/typescript/dist/index.d.ts",
+      "default": "./packages/typescript/dist/index.js"
+    }
+  },
+  "files": [
+    "packages/typescript/dist",
+    "packages/typescript/package.json",
+    "schemas",
+    "specs",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "SECURITY.md",
+    "AI_GUARDRAILS.md"
+  ],
   "scripts": {
     "prepare": "npm --prefix packages/typescript install && npm --prefix packages/typescript run build"
   }
