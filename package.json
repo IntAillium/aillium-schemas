@@ -1,8 +1,12 @@
 {
-  "name": "aillium-schemas-monorepo",
-  "private": true,
+  "name": "@aillium/schemas",
+  "version": "0.1.0",
+  "private": false,
   "workspaces": [
     "packages/typescript",
     "packages/python"
-  ]
+  ],
+  "scripts": {
+    "prepare": "npm --prefix packages/typescript install && npm --prefix packages/typescript run build"
+  }
 }
