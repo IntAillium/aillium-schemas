@@ -16,6 +16,12 @@ Homepage = "https://aillium.io"
 requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["aillium_schemas*"]
+
+[tool.setuptools.package-data]
+"aillium_schemas" = ["**/*.json"]
