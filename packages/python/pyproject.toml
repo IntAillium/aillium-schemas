@@ -25,6 +25,3 @@ include = ["aillium_schemas*"]
 
 [tool.setuptools.package-data]
 "aillium_schemas" = ["**/*.json"]
-
-[tool.setuptools]
-include-package-data = true
