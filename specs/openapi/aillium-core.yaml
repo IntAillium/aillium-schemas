@@ -101,6 +101,46 @@ paths:
                   $ref: '#/components/schemas/StepUpdate'
         '404':
           description: Task not found
+  /api/v1/workers/tasks/poll:
+    get:
+      summary: Poll for a task claim
+      operationId: pollWorkerTask
+      parameters:
+        - name: task_type
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/WorkerPollRequestTaskType'
+      responses:
+        '200':
+          description: Poll response containing a claim or empty signal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerPollResponse'
+  /api/v1/workers/tasks/{task_id}/result:
+    post:
+      summary: Callback worker execution result
+      operationId: submitWorkerTaskResult
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerTaskResultRequest'
+      responses:
+        '200':
+          description: Result accepted and state transitioned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkerTaskResultResponse'
 components:
   schemas:
     BudgetCaps:
@@ -199,3 +239,276 @@ components:
           type: string
           enum: [INFO, WARNING, ERROR]
       additionalProperties: false
+    ExecutorType:
+      type: string
+      enum: [generic, agent, tool, job]
+    ArtifactRef:
+      type: object
+      required: [uri]
+      additionalProperties: false
+      properties:
+        uri:
+          type: string
+          minLength: 1
+        contentType:
+          type: string
+        sha256:
+          type: string
+          pattern: ^[a-fA-F0-9]{64}$
+        sizeBytes:
+          type: integer
+          minimum: 0
+    ExecutorMessage:
+      type: object
+      required: [code, message]
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          minLength: 1
+        message:
+          type: string
+          minLength: 1
+    ExecutorError:
+      allOf:
+        - $ref: '#/components/schemas/ExecutorMessage'
+        - type: object
+          properties:
+            retryable:
+              type: boolean
+            details:
+              type: object
+    ExecutorRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - contractType
+        - schemaVersion
+        - requestId
+        - traceId
+        - tenantId
+        - createdAt
+        - input
+      properties:
+        contractType:
+          type: string
+          enum: [executor.request]
+        schemaVersion:
+          type: string
+          enum: ['1.0.0']
+        requestId:
+          type: string
+          minLength: 1
+        traceId:
+          type: string
+          minLength: 1
+        tenantId:
+          type: string
+          minLength: 1
+        executorType:
+          $ref: '#/components/schemas/ExecutorType'
+        createdAt:
+          type: string
+          format: date-time
+        deadlineAt:
+          type: string
+          format: date-time
+        policy:
+          type: object
+          additionalProperties: false
+          required: [policyRef]
+          properties:
+            policyRef:
+              type: string
+              minLength: 1
+            maxRuntimeMs:
+              type: integer
+              minimum: 1
+            maxCostUnits:
+              type: number
+              minimum: 0
+        input:
+          type: object
+          additionalProperties: false
+          required: [taskType, payload]
+          properties:
+            taskType:
+              type: string
+              minLength: 1
+            payload:
+              type: object
+            attachments:
+              type: array
+              items:
+                $ref: '#/components/schemas/ArtifactRef'
+            context:
+              type: object
+              additionalProperties: true
+        meta:
+          type: object
+          additionalProperties: true
+    ExecutorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - contractType
+        - schemaVersion
+        - requestId
+        - responseId
+        - traceId
+        - completedAt
+        - status
+        - result
+      properties:
+        contractType:
+          type: string
+          enum: [executor.response]
+        schemaVersion:
+          type: string
+          enum: ['1.0.0']
+        requestId:
+          type: string
+          minLength: 1
+        responseId:
+          type: string
+          minLength: 1
+        traceId:
+          type: string
+          minLength: 1
+        executorType:
+          $ref: '#/components/schemas/ExecutorType'
+        completedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [succeeded, failed, cancelled, timed_out]
+        timing:
+          type: object
+          additionalProperties: false
+          properties:
+            queuedMs:
+              type: integer
+              minimum: 0
+            runMs:
+              type: integer
+              minimum: 0
+            totalMs:
+              type: integer
+              minimum: 0
+        cost:
+          type: object
+          additionalProperties: false
+          properties:
+            units:
+              type: number
+              minimum: 0
+            currency:
+              type: string
+              minLength: 1
+        result:
+          type: object
+          additionalProperties: false
+          required: [output]
+          properties:
+            output:
+              type: object
+            artifacts:
+              type: array
+              items:
+                $ref: '#/components/schemas/ArtifactRef'
+            warnings:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExecutorMessage'
+        error:
+          $ref: '#/components/schemas/ExecutorError'
+        meta:
+          type: object
+          additionalProperties: true
+      allOf:
+        - if:
+            properties:
+              status:
+                const: succeeded
+          then:
+            not:
+              required: [error]
+        - if:
+            properties:
+              status:
+                enum: [failed, cancelled, timed_out]
+          then:
+            required: [error]
+    TaskClaimState:
+      type: string
+      enum: [CLAIMED, COMPLETED, FAILED]
+    WorkerPollRequestTaskType:
+      type: string
+      enum: [remote-handshake]
+    ClaimedTask:
+      type: object
+      additionalProperties: false
+      required:
+        - claim_id
+        - task_id
+        - state
+        - claimed_at
+        - lease_expires_at
+        - request
+      properties:
+        claim_id:
+          type: string
+        task_id:
+          type: string
+        state:
+          $ref: '#/components/schemas/TaskClaimState'
+        claimed_at:
+          type: string
+          format: date-time
+        lease_expires_at:
+          type: string
+          format: date-time
+        request:
+          $ref: '#/components/schemas/ExecutorRequest'
+    WorkerPollResponse:
+      type: object
+      additionalProperties: false
+      required: [poll_status, next_poll_after_ms]
+      properties:
+        poll_status:
+          type: string
+          enum: [claimed, empty]
+        next_poll_after_ms:
+          type: integer
+          minimum: 0
+        task:
+          $ref: '#/components/schemas/ClaimedTask'
+    WorkerTaskResultRequest:
+      type: object
+      additionalProperties: false
+      required: [tenant_id, claim_id, response]
+      properties:
+        tenant_id:
+          type: string
+        claim_id:
+          type: string
+        response:
+          $ref: '#/components/schemas/ExecutorResponse'
+        mock_mode:
+          type: boolean
+          default: true
+    WorkerTaskResultResponse:
+      type: object
+      additionalProperties: false
+      required: [task_id, state, claim_state, processed_at]
+      properties:
+        task_id:
+          type: string
+        state:
+          $ref: '#/components/schemas/TaskState'
+        claim_state:
+          $ref: '#/components/schemas/TaskClaimState'
+        processed_at:
+          type: string
+          format: date-time

@@ -1,4 +1,12 @@
-import type { StepUpdate, Task, TaskCreate } from "./contracts.js";
+import type {
+  StepUpdate,
+  Task,
+  TaskCreate,
+  WorkerPollRequest,
+  WorkerPollResponse,
+  WorkerTaskResultRequest,
+  WorkerTaskResultResponse,
+} from "./contracts.js";
 
 export interface CreateTaskRequest {
   body: TaskCreate;
@@ -53,10 +61,35 @@ export interface ListTaskEventsResponse {
   body: StepUpdate[];
 }
 
+export interface PollWorkerTaskRequest {
+  query: WorkerPollRequest;
+}
+
+export interface PollWorkerTaskResponse {
+  status: 200;
+  body: WorkerPollResponse;
+}
+
+export interface SubmitWorkerTaskResultRequest {
+  path: {
+    task_id: string;
+  };
+  body: WorkerTaskResultRequest;
+}
+
+export interface SubmitWorkerTaskResultResponse {
+  status: 200;
+  body: WorkerTaskResultResponse;
+}
+
 export type AilliumCoreApiClient = {
   createTask(request: CreateTaskRequest): Promise<CreateTaskResponse>;
   getTask(request: GetTaskRequest): Promise<GetTaskResponse>;
   approveTask(request: ApproveTaskRequest): Promise<ApproveTaskResponse>;
   cancelTask(request: CancelTaskRequest): Promise<CancelTaskResponse>;
   listTaskEvents(request: ListTaskEventsRequest): Promise<ListTaskEventsResponse>;
+  pollWorkerTask(request: PollWorkerTaskRequest): Promise<PollWorkerTaskResponse>;
+  submitWorkerTaskResult(
+    request: SubmitWorkerTaskResultRequest,
+  ): Promise<SubmitWorkerTaskResultResponse>;
 };
