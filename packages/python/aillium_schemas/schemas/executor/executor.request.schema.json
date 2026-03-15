@@ -5,60 +5,64 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "contractType",
-    "schemaVersion",
-    "requestId",
-    "traceId",
-    "tenantId",
-    "createdAt",
+    "contract_type",
+    "schema_version",
+    "task_id",
+    "trace_id",
+    "tenant_id",
+    "created_at",
     "input"
   ],
   "properties": {
-    "contractType": {
+    "contract_type": {
       "const": "executor.request"
     },
-    "schemaVersion": {
+    "schema_version": {
       "type": "string",
       "pattern": "^1\\.0\\.0$"
     },
-    "requestId": {
+    "task_id": {
       "type": "string",
       "minLength": 1
     },
-    "traceId": {
+    "worker_id": {
       "type": "string",
       "minLength": 1
     },
-    "tenantId": {
+    "trace_id": {
       "type": "string",
       "minLength": 1
     },
-    "executorType": {
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executor_type": {
       "type": "string",
       "enum": ["generic", "agent", "tool", "job"]
     },
-    "createdAt": {
+    "created_at": {
       "type": "string",
       "format": "date-time"
     },
-    "deadlineAt": {
+    "deadline_at": {
       "type": "string",
       "format": "date-time"
     },
     "policy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["policyRef"],
+      "required": ["policy_ref"],
       "properties": {
-        "policyRef": {
+        "policy_ref": {
           "type": "string",
           "minLength": 1
         },
-        "maxRuntimeMs": {
+        "max_runtime_ms": {
           "type": "integer",
           "minimum": 1
         },
-        "maxCostUnits": {
+        "max_cost_units": {
           "type": "number",
           "minimum": 0
         }
@@ -67,9 +71,9 @@
     "input": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["taskType", "payload"],
+      "required": ["task_type", "payload"],
       "properties": {
-        "taskType": {
+        "task_type": {
           "type": "string",
           "minLength": 1
         },
@@ -79,7 +83,7 @@
         "attachments": {
           "type": "array",
           "items": {
-            "$ref": "executor.common.schema.json#/$defs/artifactRef"
+            "$ref": "executor.common.schema.json#/$defs/artifact_ref"
           }
         },
         "context": {

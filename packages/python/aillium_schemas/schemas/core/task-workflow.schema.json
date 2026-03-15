@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/core/task-workflow.schema.json",
+  "title": "Aillium Core Task and Workflow Contracts",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/task_create" },
+    { "$ref": "#/$defs/task" },
+    { "$ref": "#/$defs/step_update" }
+  ],
+  "$defs": {
+    "budget_caps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_usd", "max_tokens", "enforcement"],
+      "properties": {
+        "max_usd": { "type": "number" },
+        "max_tokens": { "type": ["number", "null"] },
+        "enforcement": { "type": "string", "enum": ["HARD", "SOFT"] }
+      }
+    },
+    "risk_level": { "type": "string", "enum": ["LOW", "HIGH", "CRITICAL"] },
+    "task_state": {
+      "type": "string",
+      "enum": ["PENDING", "NEEDS_APPROVAL", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
+    },
+    "task_create": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant_id", "device_id", "budget_caps", "allowed_tools", "risk_level"],
+      "properties": {
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "device_id": { "type": "string", "minLength": 1 },
+        "budget_caps": { "$ref": "#/$defs/budget_caps" },
+        "allowed_tools": { "type": "array", "items": { "type": "string" } },
+        "risk_level": { "$ref": "#/$defs/risk_level" },
+        "trace_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "task": {
+      "allOf": [
+        { "$ref": "#/$defs/task_create" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["task_id", "state"],
+          "properties": {
+            "task_id": { "type": "string", "minLength": 1 },
+            "state": { "$ref": "#/$defs/task_state" }
+          }
+        }
+      ]
+    },
+    "step_update": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "step_index", "description", "timestamp", "status"],
+      "properties": {
+        "task_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "step_index": { "type": "integer", "minimum": 0 },
+        "description": { "type": "string", "minLength": 1 },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["INFO", "WARNING", "ERROR"] }
+      }
+    }
+  }
+}

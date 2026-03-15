@@ -8,6 +8,7 @@ export const PlanValues = ["STARTER", "GROWTH", "OPERATOR", "ENTERPRISE"] as con
 export type Plan = (typeof PlanValues)[number];
 export const PlanSchema = z.enum(PlanValues);
 
+// Aillium Core boundary contracts
 export const TaskStateValues = [
   "PENDING",
   "NEEDS_APPROVAL",
@@ -36,6 +37,7 @@ export const TaskCreateSchema = z.object({
   budget_caps: BudgetCapsSchema,
   allowed_tools: z.array(z.string()),
   risk_level: RiskLevelSchema,
+  trace_id: z.string().optional(),
 });
 export type TaskCreate = z.infer<typeof TaskCreateSchema>;
 
@@ -47,12 +49,104 @@ export type Task = z.infer<typeof TaskSchema>;
 
 export const StepUpdateSchema = z.object({
   task_id: z.string(),
+  trace_id: z.string().optional(),
   step_index: z.number().int().nonnegative(),
   description: z.string(),
   timestamp: z.string().datetime(),
   status: z.enum(["INFO", "WARNING", "ERROR"]),
 });
 export type StepUpdate = z.infer<typeof StepUpdateSchema>;
+
+// OpenClaw runtime boundary contracts
+export const RuntimeStatusSchema = z.enum(["succeeded", "failed", "cancelled", "timed_out"]);
+export type RuntimeStatus = z.infer<typeof RuntimeStatusSchema>;
+
+export const RuntimeDispatchSchema = z.object({
+  contract_type: z.literal("openclaw.runtime.dispatch"),
+  schema_version: z.literal("1.0.0"),
+  task_id: z.string(),
+  worker_id: z.string(),
+  tenant_id: z.string(),
+  trace_id: z.string(),
+  created_at: z.string().datetime(),
+  deadline_at: z.string().datetime().optional(),
+  input: z.object({
+    task_type: z.string(),
+    payload: z.record(z.unknown()),
+    context: z.record(z.unknown()).optional(),
+  }),
+});
+export type RuntimeDispatch = z.infer<typeof RuntimeDispatchSchema>;
+
+export const RuntimeResultSchema = z.object({
+  contract_type: z.literal("openclaw.runtime.result"),
+  schema_version: z.literal("1.0.0"),
+  task_id: z.string(),
+  worker_id: z.string(),
+  tenant_id: z.string(),
+  trace_id: z.string(),
+  completed_at: z.string().datetime(),
+  status: RuntimeStatusSchema,
+  result: z.object({
+    output: z.record(z.unknown()),
+  }),
+  error: z
+    .object({
+      code: z.string(),
+      message: z.string(),
+      retryable: z.boolean().optional(),
+    })
+    .optional(),
+});
+export type RuntimeResult = z.infer<typeof RuntimeResultSchema>;
+
+// MeshCentral remote-support boundary contracts
+export const MeshSessionRequestSchema = z.object({
+  tenant_id: z.string(),
+  task_id: z.string(),
+  trace_id: z.string(),
+  device_id: z.string(),
+  operator_id: z.string(),
+  requested_at: z.string().datetime().optional(),
+});
+export type MeshSessionRequest = z.infer<typeof MeshSessionRequestSchema>;
+
+export const MeshSessionStateSchema = z.object({
+  tenant_id: z.string(),
+  task_id: z.string(),
+  trace_id: z.string(),
+  device_id: z.string(),
+  session_id: z.string(),
+  status: z.enum(["requested", "establishing", "active", "ended", "failed"]),
+  ended_at: z.string().datetime().optional(),
+});
+export type MeshSessionState = z.infer<typeof MeshSessionStateSchema>;
+
+/** @deprecated Use RuntimeDispatchSchema instead. */
+export const DeprecatedWorkerPollRequestSchema = z.object({
+  worker_id: z.string(),
+  tenant_id: z.string(),
+  trace_id: z.string(),
+  max_items: z.number().int().positive().optional(),
+});
+export type DeprecatedWorkerPollRequest = z.infer<typeof DeprecatedWorkerPollRequestSchema>;
+
+/** @deprecated Use RuntimeResultSchema instead. */
+export const DeprecatedWorkerPollResultSchema = z.object({
+  task_id: z.string(),
+  worker_id: z.string(),
+  tenant_id: z.string(),
+  trace_id: z.string(),
+  status: RuntimeStatusSchema,
+  output: z.record(z.unknown()).optional(),
+  error: z
+    .object({
+      code: z.string(),
+      message: z.string(),
+    })
+    .optional(),
+});
+export type DeprecatedWorkerPollResult = z.infer<typeof DeprecatedWorkerPollResultSchema>;
 
 export const EvidencePointerSchema = z.object({
   storage_provider: z.enum(["s3", "r2"]),
