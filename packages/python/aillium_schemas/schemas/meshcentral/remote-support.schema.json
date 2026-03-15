@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/meshcentral/remote-support.schema.json",
+  "title": "MeshCentral Remote-Support Boundary Contracts",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/session_request" },
+    { "$ref": "#/$defs/session_state" }
+  ],
+  "$defs": {
+    "session_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant_id", "task_id", "trace_id", "device_id", "operator_id"],
+      "properties": {
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "device_id": { "type": "string", "minLength": 1 },
+        "operator_id": { "type": "string", "minLength": 1 },
+        "requested_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "session_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant_id", "task_id", "trace_id", "device_id", "session_id", "status"],
+      "properties": {
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "device_id": { "type": "string", "minLength": 1 },
+        "session_id": { "type": "string", "minLength": 1 },
+        "status": {
+          "type": "string",
+          "enum": ["requested", "establishing", "active", "ended", "failed"]
+        },
+        "ended_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

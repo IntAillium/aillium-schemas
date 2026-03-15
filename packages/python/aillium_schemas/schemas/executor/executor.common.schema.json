@@ -3,7 +3,7 @@
   "$id": "https://schemas.aillium.dev/executor/executor.common.schema.json",
   "title": "Executor Common Definitions",
   "$defs": {
-    "artifactRef": {
+    "artifact_ref": {
       "type": "object",
       "additionalProperties": false,
       "required": ["uri"],
@@ -12,14 +12,14 @@
           "type": "string",
           "minLength": 1
         },
-        "contentType": {
+        "content_type": {
           "type": "string"
         },
         "sha256": {
           "type": "string",
           "pattern": "^[a-fA-F0-9]{64}$"
         },
-        "sizeBytes": {
+        "size_bytes": {
           "type": "integer",
           "minimum": 0
         }
@@ -65,15 +65,15 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "queuedMs": {
+        "queued_ms": {
           "type": "integer",
           "minimum": 0
         },
-        "runMs": {
+        "run_ms": {
           "type": "integer",
           "minimum": 0
         },
-        "totalMs": {
+        "total_ms": {
           "type": "integer",
           "minimum": 0
         }
