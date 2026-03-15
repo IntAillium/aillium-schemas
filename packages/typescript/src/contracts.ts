@@ -100,3 +100,142 @@ export const OpenMeterEventSchema = z.discriminatedUnion("event_type", [
   ActiveDeviceEventSchema,
 ]);
 export type OpenMeterEvent = z.infer<typeof OpenMeterEventSchema>;
+
+export const ExecutorTypeSchema = z.enum(["generic", "agent", "tool", "job"]);
+export type ExecutorType = z.infer<typeof ExecutorTypeSchema>;
+
+export const ArtifactRefSchema = z.object({
+  uri: z.string().min(1),
+  contentType: z.string().optional(),
+  sha256: z.string().regex(/^[a-fA-F0-9]{64}$/).optional(),
+  sizeBytes: z.number().int().nonnegative().optional(),
+});
+export type ArtifactRef = z.infer<typeof ArtifactRefSchema>;
+
+export const ExecutorMessageSchema = z.object({
+  code: z.string().min(1),
+  message: z.string().min(1),
+});
+export type ExecutorMessage = z.infer<typeof ExecutorMessageSchema>;
+
+export const ExecutorErrorSchema = ExecutorMessageSchema.extend({
+  retryable: z.boolean().optional(),
+  details: z.record(z.unknown()).optional(),
+});
+export type ExecutorError = z.infer<typeof ExecutorErrorSchema>;
+
+export const ExecutorRequestSchema = z.object({
+  contractType: z.literal("executor.request"),
+  schemaVersion: z.literal("1.0.0"),
+  requestId: z.string().min(1),
+  traceId: z.string().min(1),
+  tenantId: z.string().min(1),
+  executorType: ExecutorTypeSchema.optional(),
+  createdAt: z.string().datetime(),
+  deadlineAt: z.string().datetime().optional(),
+  policy: z
+    .object({
+      policyRef: z.string().min(1),
+      maxRuntimeMs: z.number().int().positive().optional(),
+      maxCostUnits: z.number().nonnegative().optional(),
+    })
+    .optional(),
+  input: z.object({
+    taskType: z.string().min(1),
+    payload: z.record(z.unknown()),
+    attachments: z.array(ArtifactRefSchema).optional(),
+    context: z.record(z.unknown()).optional(),
+  }),
+  meta: z.record(z.unknown()).optional(),
+});
+export type ExecutorRequest = z.infer<typeof ExecutorRequestSchema>;
+
+export const ExecutorResponseSchema = z
+  .object({
+    contractType: z.literal("executor.response"),
+    schemaVersion: z.literal("1.0.0"),
+    requestId: z.string().min(1),
+    responseId: z.string().min(1),
+    traceId: z.string().min(1),
+    executorType: ExecutorTypeSchema.optional(),
+    completedAt: z.string().datetime(),
+    status: z.enum(["succeeded", "failed", "cancelled", "timed_out"]),
+    timing: z
+      .object({
+        queuedMs: z.number().int().nonnegative().optional(),
+        runMs: z.number().int().nonnegative().optional(),
+        totalMs: z.number().int().nonnegative().optional(),
+      })
+      .optional(),
+    cost: z
+      .object({
+        units: z.number().nonnegative().optional(),
+        currency: z.string().min(1).optional(),
+      })
+      .optional(),
+    result: z.object({
+      output: z.record(z.unknown()),
+      artifacts: z.array(ArtifactRefSchema).optional(),
+      warnings: z.array(ExecutorMessageSchema).optional(),
+    }),
+    error: ExecutorErrorSchema.optional(),
+    meta: z.record(z.unknown()).optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.status === "succeeded" && val.error) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "error must be omitted for succeeded responses",
+        path: ["error"],
+      });
+    }
+    if (val.status !== "succeeded" && !val.error) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "error is required unless status is succeeded",
+        path: ["error"],
+      });
+    }
+  });
+export type ExecutorResponse = z.infer<typeof ExecutorResponseSchema>;
+
+export const TaskClaimStateSchema = z.enum(["CLAIMED", "COMPLETED", "FAILED"]);
+export type TaskClaimState = z.infer<typeof TaskClaimStateSchema>;
+
+export const WorkerPollRequestSchema = z.object({
+  task_type: z.literal("remote-handshake"),
+});
+export type WorkerPollRequest = z.infer<typeof WorkerPollRequestSchema>;
+
+export const ClaimedTaskSchema = z.object({
+  claim_id: z.string(),
+  task_id: z.string(),
+  state: TaskClaimStateSchema,
+  claimed_at: z.string().datetime(),
+  lease_expires_at: z.string().datetime(),
+  request: ExecutorRequestSchema,
+});
+export type ClaimedTask = z.infer<typeof ClaimedTaskSchema>;
+
+export const WorkerPollResponseSchema = z.object({
+  poll_status: z.enum(["claimed", "empty"]),
+  next_poll_after_ms: z.number().int().nonnegative(),
+  task: ClaimedTaskSchema.optional(),
+});
+export type WorkerPollResponse = z.infer<typeof WorkerPollResponseSchema>;
+
+export const WorkerTaskResultRequestSchema = z.object({
+  tenant_id: z.string(),
+  claim_id: z.string(),
+  response: ExecutorResponseSchema,
+  mock_mode: z.boolean().default(true),
+});
+export type WorkerTaskResultRequest = z.infer<typeof WorkerTaskResultRequestSchema>;
+
+export const WorkerTaskResultResponseSchema = z.object({
+  task_id: z.string(),
+  state: TaskStateSchema,
+  claim_state: TaskClaimStateSchema,
+  processed_at: z.string().datetime(),
+});
+export type WorkerTaskResultResponse = z.infer<typeof WorkerTaskResultResponseSchema>;

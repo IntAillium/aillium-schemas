@@ -4,7 +4,15 @@ from typing import List
 
 from pydantic import BaseModel, ConfigDict
 
-from .contracts import StepUpdate, Task, TaskCreate
+from .contracts import (
+    StepUpdate,
+    Task,
+    TaskCreate,
+    WorkerPollRequest,
+    WorkerPollResponse,
+    WorkerTaskResultRequest,
+    WorkerTaskResultResponse,
+)
 
 
 class CreateTaskRequest(BaseModel):
@@ -70,3 +78,30 @@ class ListTaskEventsResponse(BaseModel):
 
     status: int = 200
     body: List[StepUpdate]
+
+
+class PollWorkerTaskRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    query: WorkerPollRequest
+
+
+class PollWorkerTaskResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: int = 200
+    body: WorkerPollResponse
+
+
+class SubmitWorkerTaskResultRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    task_id: str
+    body: WorkerTaskResultRequest
+
+
+class SubmitWorkerTaskResultResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: int = 200
+    body: WorkerTaskResultResponse
