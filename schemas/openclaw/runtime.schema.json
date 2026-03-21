@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/openclaw/runtime.schema.json",
+  "title": "OpenClaw Runtime and Orchestration Contracts",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/runtime_dispatch" },
+    { "$ref": "#/$defs/runtime_result" }
+  ],
+  "$defs": {
+    "runtime_dispatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_type",
+        "schema_version",
+        "task_id",
+        "worker_id",
+        "tenant_id",
+        "trace_id",
+        "created_at",
+        "input"
+      ],
+      "properties": {
+        "contract_type": { "const": "openclaw.runtime.dispatch" },
+        "schema_version": { "type": "string", "pattern": "^1\\.0\\.0$" },
+        "task_id": { "type": "string", "minLength": 1 },
+        "worker_id": { "type": "string", "minLength": 1 },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "deadline_at": { "type": "string", "format": "date-time" },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["task_type", "payload"],
+          "properties": {
+            "task_type": { "type": "string", "minLength": 1 },
+            "payload": { "type": "object" },
+            "context": { "type": "object", "additionalProperties": true }
+          }
+        }
+      }
+    },
+    "runtime_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_type",
+        "schema_version",
+        "task_id",
+        "worker_id",
+        "tenant_id",
+        "trace_id",
+        "completed_at",
+        "status",
+        "result"
+      ],
+      "properties": {
+        "contract_type": { "const": "openclaw.runtime.result" },
+        "schema_version": { "type": "string", "pattern": "^1\\.0\\.0$" },
+        "task_id": { "type": "string", "minLength": 1 },
+        "worker_id": { "type": "string", "minLength": 1 },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "status": {
+          "type": "string",
+          "enum": ["succeeded", "failed", "cancelled", "timed_out"]
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["output"],
+          "properties": {
+            "output": { "type": "object" },
+            "artifacts": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["uri"],
+                "properties": {
+                  "uri": { "type": "string", "minLength": 1 },
+                  "content_type": { "type": "string" },
+                  "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+                }
+              }
+            }
+          }
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string", "minLength": 1 },
+            "message": { "type": "string", "minLength": 1 },
+            "retryable": { "type": "boolean" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "succeeded" } } },
+          "then": { "not": { "required": ["error"] } }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": { "enum": ["failed", "cancelled", "timed_out"] }
+            }
+          },
+          "then": { "required": ["error"] }
+        }
+      ]
+    }
+  }
+}

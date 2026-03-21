@@ -1,4 +1,10 @@
-import type { StepUpdate, Task, TaskCreate } from "./contracts.js";
+import type {
+  DeprecatedWorkerPollRequest,
+  DeprecatedWorkerPollResult,
+  StepUpdate,
+  Task,
+  TaskCreate,
+} from "./contracts.js";
 
 export interface CreateTaskRequest {
   body: TaskCreate;
@@ -53,10 +59,41 @@ export interface ListTaskEventsResponse {
   body: StepUpdate[];
 }
 
+/** @deprecated Use OpenClaw runtime contracts instead. */
+export interface WorkerPollRequest {
+  path: {
+    worker_id: string;
+  };
+  body: DeprecatedWorkerPollRequest;
+}
+
+/** @deprecated Use OpenClaw runtime contracts instead. */
+export interface WorkerPollResponse {
+  status: 200;
+  body: Task[];
+}
+
+/** @deprecated Use OpenClaw runtime contracts instead. */
+export interface WorkerResultRequest {
+  path: {
+    worker_id: string;
+  };
+  body: DeprecatedWorkerPollResult;
+}
+
+/** @deprecated Use OpenClaw runtime contracts instead. */
+export interface WorkerResultResponse {
+  status: 202;
+}
+
 export type AilliumCoreApiClient = {
   createTask(request: CreateTaskRequest): Promise<CreateTaskResponse>;
   getTask(request: GetTaskRequest): Promise<GetTaskResponse>;
   approveTask(request: ApproveTaskRequest): Promise<ApproveTaskResponse>;
   cancelTask(request: CancelTaskRequest): Promise<CancelTaskResponse>;
   listTaskEvents(request: ListTaskEventsRequest): Promise<ListTaskEventsResponse>;
+  /** @deprecated Use OpenClaw runtime contracts instead. */
+  workerPoll(request: WorkerPollRequest): Promise<WorkerPollResponse>;
+  /** @deprecated Use OpenClaw runtime contracts instead. */
+  workerResult(request: WorkerResultRequest): Promise<WorkerResultResponse>;
 };

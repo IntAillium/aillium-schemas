@@ -1,13 +1,19 @@
 openapi: 3.0.3
 info:
   title: Aillium Core API
-  version: 0.1.0
-  description: Canonical API contract for aillium-core.
+  version: 0.2.0
+  description: Canonical API contract for aillium-core control-plane contracts.
 servers:
   - url: https://api.aillium.io
+tags:
+  - name: core
+    description: Aillium Core control-plane contracts.
+  - name: deprecated-worker
+    description: Deprecated legacy worker surfaces retained temporarily for compatibility.
 paths:
   /tasks:
     post:
+      tags: [core]
       summary: Create a task
       operationId: createTask
       requestBody:
@@ -25,6 +31,7 @@ paths:
                 $ref: '#/components/schemas/Task'
   /tasks/{task_id}:
     get:
+      tags: [core]
       summary: Get a task
       operationId: getTask
       parameters:
@@ -44,6 +51,7 @@ paths:
           description: Task not found
   /tasks/{task_id}/approve:
     post:
+      tags: [core]
       summary: Approve a task
       operationId: approveTask
       parameters:
@@ -63,6 +71,7 @@ paths:
           description: Task not found
   /tasks/{task_id}/cancel:
     post:
+      tags: [core]
       summary: Cancel a task
       operationId: cancelTask
       parameters:
@@ -82,6 +91,7 @@ paths:
           description: Task not found
   /tasks/{task_id}/events:
     get:
+      tags: [core]
       summary: List task events
       operationId: listTaskEvents
       parameters:
@@ -101,6 +111,54 @@ paths:
                   $ref: '#/components/schemas/StepUpdate'
         '404':
           description: Task not found
+  /workers/{worker_id}/poll:
+    post:
+      tags: [deprecated-worker]
+      deprecated: true
+      summary: Deprecated worker poll
+      operationId: workerPoll
+      parameters:
+        - name: worker_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeprecatedWorkerPollRequest'
+      responses:
+        '200':
+          description: Poll result
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+  /workers/{worker_id}/results:
+    post:
+      tags: [deprecated-worker]
+      deprecated: true
+      summary: Deprecated worker result callback
+      operationId: workerResult
+      parameters:
+        - name: worker_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeprecatedWorkerPollResult'
+      responses:
+        '202':
+          description: Accepted
 components:
   schemas:
     BudgetCaps:
@@ -146,6 +204,8 @@ components:
             type: string
         risk_level:
           $ref: '#/components/schemas/RiskLevel'
+        trace_id:
+          type: string
       additionalProperties: false
     Task:
       type: object
@@ -174,6 +234,8 @@ components:
           $ref: '#/components/schemas/RiskLevel'
         state:
           $ref: '#/components/schemas/TaskState'
+        trace_id:
+          type: string
       additionalProperties: false
     StepUpdate:
       type: object
@@ -185,6 +247,8 @@ components:
         - status
       properties:
         task_id:
+          type: string
+        trace_id:
           type: string
         step_index:
           type: integer
@@ -198,4 +262,58 @@ components:
         status:
           type: string
           enum: [INFO, WARNING, ERROR]
+      additionalProperties: false
+    DeprecatedWorkerPollRequest:
+      type: object
+      deprecated: true
+      required: [worker_id, tenant_id, trace_id]
+      properties:
+        worker_id:
+          type: string
+          deprecated: true
+        tenant_id:
+          type: string
+          deprecated: true
+        trace_id:
+          type: string
+          deprecated: true
+        max_items:
+          type: integer
+          minimum: 1
+          deprecated: true
+      additionalProperties: false
+    DeprecatedWorkerPollResult:
+      type: object
+      deprecated: true
+      required: [task_id, worker_id, tenant_id, trace_id, status]
+      properties:
+        task_id:
+          type: string
+          deprecated: true
+        worker_id:
+          type: string
+          deprecated: true
+        tenant_id:
+          type: string
+          deprecated: true
+        trace_id:
+          type: string
+          deprecated: true
+        status:
+          type: string
+          enum: [succeeded, failed, cancelled, timed_out]
+          deprecated: true
+        output:
+          type: object
+          deprecated: true
+        error:
+          type: object
+          deprecated: true
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+          required: [code, message]
+          additionalProperties: false
       additionalProperties: false

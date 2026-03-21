@@ -5,40 +5,44 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "contractType",
-    "schemaVersion",
-    "requestId",
-    "responseId",
-    "traceId",
-    "completedAt",
+    "contract_type",
+    "schema_version",
+    "task_id",
+    "response_id",
+    "trace_id",
+    "completed_at",
     "status",
     "result"
   ],
   "properties": {
-    "contractType": {
+    "contract_type": {
       "const": "executor.response"
     },
-    "schemaVersion": {
+    "schema_version": {
       "type": "string",
       "pattern": "^1\\.0\\.0$"
     },
-    "requestId": {
+    "task_id": {
       "type": "string",
       "minLength": 1
     },
-    "responseId": {
+    "worker_id": {
       "type": "string",
       "minLength": 1
     },
-    "traceId": {
+    "response_id": {
       "type": "string",
       "minLength": 1
     },
-    "executorType": {
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "executor_type": {
       "type": "string",
       "enum": ["generic", "agent", "tool", "job"]
     },
-    "completedAt": {
+    "completed_at": {
       "type": "string",
       "format": "date-time"
     },
@@ -63,7 +67,7 @@
         "artifacts": {
           "type": "array",
           "items": {
-            "$ref": "executor.common.schema.json#/$defs/artifactRef"
+            "$ref": "executor.common.schema.json#/$defs/artifact_ref"
           }
         },
         "warnings": {

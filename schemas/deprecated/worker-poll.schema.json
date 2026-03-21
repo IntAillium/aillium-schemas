@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/deprecated/worker-poll.schema.json",
+  "title": "Deprecated Worker Poll and Result Contracts",
+  "description": "Deprecated compatibility schema for legacy worker push/poll surfaces. Use OpenClaw runtime contracts instead.",
+  "deprecated": true,
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/worker_poll_request" },
+    { "$ref": "#/$defs/worker_poll_result" }
+  ],
+  "$defs": {
+    "worker_poll_request": {
+      "type": "object",
+      "deprecated": true,
+      "additionalProperties": false,
+      "required": ["worker_id", "tenant_id", "trace_id"],
+      "properties": {
+        "worker_id": { "type": "string", "deprecated": true },
+        "tenant_id": { "type": "string", "deprecated": true },
+        "trace_id": { "type": "string", "deprecated": true },
+        "max_items": { "type": "integer", "minimum": 1, "deprecated": true }
+      }
+    },
+    "worker_poll_result": {
+      "type": "object",
+      "deprecated": true,
+      "additionalProperties": false,
+      "required": ["task_id", "worker_id", "tenant_id", "trace_id", "status"],
+      "properties": {
+        "task_id": { "type": "string", "deprecated": true },
+        "worker_id": { "type": "string", "deprecated": true },
+        "tenant_id": { "type": "string", "deprecated": true },
+        "trace_id": { "type": "string", "deprecated": true },
+        "status": {
+          "type": "string",
+          "enum": ["succeeded", "failed", "cancelled", "timed_out"],
+          "deprecated": true
+        },
+        "output": { "type": "object", "deprecated": true },
+        "error": {
+          "type": "object",
+          "deprecated": true,
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
