@@ -41,5 +41,8 @@ build/
 .env
 .env.*
 
+# Lock files (managed per-package, not at root)
+package-lock.json
+
 # Logs
 *.log
