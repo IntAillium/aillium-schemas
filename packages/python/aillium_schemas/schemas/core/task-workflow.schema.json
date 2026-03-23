@@ -19,7 +19,7 @@
         "enforcement": { "type": "string", "enum": ["HARD", "SOFT"] }
       }
     },
-    "risk_level": { "type": "string", "enum": ["LOW", "HIGH", "CRITICAL"] },
+    "risk_level": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
     "task_state": {
       "type": "string",
       "enum": ["PENDING", "NEEDS_APPROVAL", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
