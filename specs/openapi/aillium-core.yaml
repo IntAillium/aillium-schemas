@@ -179,7 +179,7 @@ components:
       additionalProperties: false
     RiskLevel:
       type: string
-      enum: [LOW, HIGH, CRITICAL]
+      enum: [LOW, MEDIUM, HIGH, CRITICAL]
     TaskState:
       type: string
       enum: [PENDING, NEEDS_APPROVAL, RUNNING, COMPLETED, FAILED, CANCELLED]
