@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class Role(str, Enum):
     SUPER_ADMIN = "SUPER_ADMIN"
     ADMIN = "ADMIN"
-    CUSTOMER = "CUSTOMER"
+    USER = "USER"
 
 
 class Plan(str, Enum):
@@ -32,6 +32,7 @@ class TaskState(str, Enum):
 
 class RiskLevel(str, Enum):
     LOW = "LOW"
+    MEDIUM = "MEDIUM"
     HIGH = "HIGH"
     CRITICAL = "CRITICAL"
 

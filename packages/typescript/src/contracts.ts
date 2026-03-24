@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const RoleValues = ["SUPER_ADMIN", "ADMIN", "CUSTOMER"] as const;
+export const RoleValues = ["SUPER_ADMIN", "ADMIN", "USER"] as const;
 export type Role = (typeof RoleValues)[number];
 export const RoleSchema = z.enum(RoleValues);
 
@@ -20,7 +20,7 @@ export const TaskStateValues = [
 export type TaskState = (typeof TaskStateValues)[number];
 export const TaskStateSchema = z.enum(TaskStateValues);
 
-export const RiskLevelValues = ["LOW", "HIGH", "CRITICAL"] as const;
+export const RiskLevelValues = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 export type RiskLevel = (typeof RiskLevelValues)[number];
 export const RiskLevelSchema = z.enum(RiskLevelValues);
 
