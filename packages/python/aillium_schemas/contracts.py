@@ -755,7 +755,7 @@ class ApprovalDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["approval_decision"]
-    approval_id: str
-    approver_id: str
+    approval_id: str = Field(min_length=1)
+    approver_id: str = Field(min_length=1)
     decision: ApprovalDecisionValue
     comment: str | None = None
