@@ -150,7 +150,9 @@
             "max_auto_approve_gbp": { "type": "number" }
           }
         },
-        "risk_level": { "$ref": "#/$defs/risk_level" }
+        "risk_level": { "$ref": "#/$defs/risk_level" },
+        "requested_by": { "type": ["string", "null"], "description": "ID of the agent or user that requested the skill draft" },
+        "priority": { "type": "number", "minimum": 0, "maximum": 1, "description": "Priority weight for the draft request (0 = low, 1 = high)" }
       }
     },
 
