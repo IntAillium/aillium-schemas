@@ -18,7 +18,14 @@
     { "$ref": "#/$defs/tool_execution_result" },
     { "$ref": "#/$defs/payment_intent" },
     { "$ref": "#/$defs/invoice" },
-    { "$ref": "#/$defs/heartbeat_report" }
+    { "$ref": "#/$defs/heartbeat_report" },
+    { "$ref": "#/$defs/eod_report" },
+    { "$ref": "#/$defs/ooo_session_state" },
+    { "$ref": "#/$defs/crm_contact" },
+    { "$ref": "#/$defs/crm_deal" },
+    { "$ref": "#/$defs/support_ticket" },
+    { "$ref": "#/$defs/approval_request" },
+    { "$ref": "#/$defs/approval_decision" }
   ],
   "$defs": {
     "risk_level": {
@@ -61,6 +68,38 @@
     "invoice_status": {
       "type": "string",
       "enum": ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED", "VOID"]
+    },
+    "escalation_policy": {
+      "type": "string",
+      "enum": ["QUEUE_ALL", "DELEGATE_LOW_RISK", "DELEGATE_ALL", "EMERGENCY_ONLY"]
+    },
+    "crm_contact_source": {
+      "type": "string",
+      "enum": ["MANUAL", "EMAIL", "FORM", "IMPORT", "AGENT_DISCOVERED"]
+    },
+    "crm_deal_stage": {
+      "type": "string",
+      "enum": ["LEAD", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"]
+    },
+    "support_channel": {
+      "type": "string",
+      "enum": ["EMAIL", "CHAT", "FORM", "PHONE", "SOCIAL"]
+    },
+    "support_priority": {
+      "type": "string",
+      "enum": ["LOW", "NORMAL", "HIGH", "URGENT"]
+    },
+    "support_ticket_status": {
+      "type": "string",
+      "enum": ["OPEN", "IN_PROGRESS", "WAITING_CUSTOMER", "RESOLVED", "CLOSED"]
+    },
+    "approval_request_status": {
+      "type": "string",
+      "enum": ["PENDING", "APPROVED", "REJECTED", "ESCALATED", "EXPIRED"]
+    },
+    "approval_decision_value": {
+      "type": "string",
+      "enum": ["APPROVED", "REJECTED"]
     },
 
     "skill_candidate": {
@@ -419,6 +458,136 @@
             "avg_task_duration_ms": { "type": "number", "minimum": 0 }
           }
         }
+      }
+    },
+
+    "eod_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "report_date", "tasks_completed", "tasks_failed", "tasks_in_progress", "approvals_processed", "approvals_pending", "payments_processed_gbp", "invoices_created_gbp", "total_cost_gbp", "alerts_raised"],
+      "properties": {
+        "contract_type": { "const": "eod_report" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "report_date": { "type": "string", "format": "date-time" },
+        "tasks_completed": { "type": "integer" },
+        "tasks_failed": { "type": "integer" },
+        "tasks_in_progress": { "type": "integer" },
+        "approvals_processed": { "type": "integer" },
+        "approvals_pending": { "type": "integer" },
+        "payments_processed_gbp": { "type": "number" },
+        "invoices_created_gbp": { "type": "number" },
+        "total_cost_gbp": { "type": "number" },
+        "alerts_raised": { "type": "integer" },
+        "department_breakdown": { "type": ["object", "null"] },
+        "key_decisions": {
+          "type": ["array", "null"],
+          "items": { "type": "object" }
+        },
+        "summary": { "type": ["string", "null"] }
+      }
+    },
+
+    "ooo_session_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "user_id", "is_active", "escalation_policy", "total_queued", "total_auto_approved", "total_delegated"],
+      "properties": {
+        "contract_type": { "const": "ooo_session_state" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "user_id": { "type": "string", "minLength": 1 },
+        "is_active": { "type": "boolean" },
+        "escalation_policy": { "$ref": "#/$defs/escalation_policy" },
+        "delegate_agent_id": { "type": ["string", "null"] },
+        "auto_response_message": { "type": ["string", "null"] },
+        "expected_return_at": { "type": ["string", "null"], "format": "date-time" },
+        "total_queued": { "type": "integer" },
+        "total_auto_approved": { "type": "integer" },
+        "total_delegated": { "type": "integer" }
+      }
+    },
+
+    "crm_contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "name", "source"],
+      "properties": {
+        "contract_type": { "const": "crm_contact" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "email": { "type": ["string", "null"] },
+        "phone": { "type": ["string", "null"] },
+        "company": { "type": ["string", "null"] },
+        "role": { "type": ["string", "null"] },
+        "source": { "$ref": "#/$defs/crm_contact_source" },
+        "tags": {
+          "type": ["array", "null"],
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "crm_deal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "contact_id", "title", "value_gbp", "stage", "pipeline"],
+      "properties": {
+        "contract_type": { "const": "crm_deal" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "contact_id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "value_gbp": { "type": "number" },
+        "stage": { "$ref": "#/$defs/crm_deal_stage" },
+        "pipeline": { "type": "string", "minLength": 1 },
+        "expected_close_date": { "type": ["string", "null"] },
+        "assigned_agent_id": { "type": ["string", "null"] }
+      }
+    },
+
+    "support_ticket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "channel", "body", "priority", "status"],
+      "properties": {
+        "contract_type": { "const": "support_ticket" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "channel": { "$ref": "#/$defs/support_channel" },
+        "customer_email": { "type": ["string", "null"] },
+        "customer_name": { "type": ["string", "null"] },
+        "subject": { "type": ["string", "null"] },
+        "body": { "type": "string", "minLength": 1 },
+        "priority": { "$ref": "#/$defs/support_priority" },
+        "status": { "$ref": "#/$defs/support_ticket_status" }
+      }
+    },
+
+    "approval_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "agent_id", "action_type", "risk_level", "reason", "required_approval_level", "status"],
+      "properties": {
+        "contract_type": { "const": "approval_request" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "agent_id": { "type": "string", "minLength": 1 },
+        "department_id": { "type": ["string", "null"] },
+        "action_type": { "type": "string", "minLength": 1 },
+        "risk_level": { "$ref": "#/$defs/risk_level" },
+        "estimated_cost_gbp": { "type": ["number", "null"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "required_approval_level": { "$ref": "#/$defs/approval_level" },
+        "status": { "$ref": "#/$defs/approval_request_status" }
+      }
+    },
+
+    "approval_decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "approval_id", "approver_id", "decision"],
+      "properties": {
+        "contract_type": { "const": "approval_decision" },
+        "approval_id": { "type": "string", "minLength": 1 },
+        "approver_id": { "type": "string", "minLength": 1 },
+        "decision": { "$ref": "#/$defs/approval_decision_value" },
+        "comment": { "type": ["string", "null"] }
       }
     }
   }

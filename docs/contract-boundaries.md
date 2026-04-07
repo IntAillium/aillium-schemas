@@ -30,7 +30,8 @@ This repository is the source of truth for boundary contracts split by architect
 - Contracts: skill_candidate, skill_draft_request, skill_validation_result,
   trajectory_record, learning_evaluation, governance_policy,
   action_evaluation_request/result, tool_definition, tool_execution_request/result,
-  payment_intent, invoice, heartbeat_report.
+  payment_intent, invoice, heartbeat_report, eod_report, ooo_session_state,
+  crm_contact, crm_deal, support_ticket, approval_request, approval_decision.
 
 ## Canonical naming policy
 All new and active contracts use snake_case naming, including:

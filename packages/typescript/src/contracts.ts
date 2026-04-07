@@ -519,3 +519,174 @@ export const HeartbeatReportSchema = z.object({
   }),
 });
 export type HeartbeatReport = z.infer<typeof HeartbeatReportSchema>;
+
+// EOD Report contracts
+export const EodReportSchema = z.object({
+  contract_type: z.literal("eod_report"),
+  tenant_id: z.string(),
+  report_date: z.string().datetime(),
+  tasks_completed: z.number().int(),
+  tasks_failed: z.number().int(),
+  tasks_in_progress: z.number().int(),
+  approvals_processed: z.number().int(),
+  approvals_pending: z.number().int(),
+  payments_processed_gbp: z.number(),
+  invoices_created_gbp: z.number(),
+  total_cost_gbp: z.number(),
+  alerts_raised: z.number().int(),
+  department_breakdown: z.record(z.unknown()).nullable(),
+  key_decisions: z
+    .array(z.record(z.unknown()))
+    .nullable(),
+  summary: z.string().nullable(),
+});
+export type EodReport = z.infer<typeof EodReportSchema>;
+
+// OOO Session State contracts
+export const EscalationPolicyValues = [
+  "QUEUE_ALL",
+  "DELEGATE_LOW_RISK",
+  "DELEGATE_ALL",
+  "EMERGENCY_ONLY",
+] as const;
+export type EscalationPolicy = (typeof EscalationPolicyValues)[number];
+export const EscalationPolicySchema = z.enum(EscalationPolicyValues);
+
+export const OooSessionStateSchema = z.object({
+  contract_type: z.literal("ooo_session_state"),
+  tenant_id: z.string(),
+  user_id: z.string(),
+  is_active: z.boolean(),
+  escalation_policy: EscalationPolicySchema,
+  delegate_agent_id: z.string().nullable(),
+  auto_response_message: z.string().nullable(),
+  expected_return_at: z.string().datetime().nullable(),
+  total_queued: z.number().int(),
+  total_auto_approved: z.number().int(),
+  total_delegated: z.number().int(),
+});
+export type OooSessionState = z.infer<typeof OooSessionStateSchema>;
+
+// CRM contracts
+export const CrmContactSourceValues = [
+  "MANUAL",
+  "EMAIL",
+  "FORM",
+  "IMPORT",
+  "AGENT_DISCOVERED",
+] as const;
+export type CrmContactSource = (typeof CrmContactSourceValues)[number];
+export const CrmContactSourceSchema = z.enum(CrmContactSourceValues);
+
+export const CrmContactSchema = z.object({
+  contract_type: z.literal("crm_contact"),
+  tenant_id: z.string(),
+  name: z.string(),
+  email: z.string().nullable(),
+  phone: z.string().nullable(),
+  company: z.string().nullable(),
+  role: z.string().nullable(),
+  source: CrmContactSourceSchema,
+  tags: z.array(z.string()).nullable(),
+});
+export type CrmContact = z.infer<typeof CrmContactSchema>;
+
+export const CrmDealStageValues = [
+  "LEAD",
+  "QUALIFIED",
+  "PROPOSAL",
+  "NEGOTIATION",
+  "WON",
+  "LOST",
+] as const;
+export type CrmDealStage = (typeof CrmDealStageValues)[number];
+export const CrmDealStageSchema = z.enum(CrmDealStageValues);
+
+export const CrmDealSchema = z.object({
+  contract_type: z.literal("crm_deal"),
+  tenant_id: z.string(),
+  contact_id: z.string(),
+  title: z.string(),
+  value_gbp: z.number(),
+  stage: CrmDealStageSchema,
+  pipeline: z.string(),
+  expected_close_date: z.string().nullable(),
+  assigned_agent_id: z.string().nullable(),
+});
+export type CrmDeal = z.infer<typeof CrmDealSchema>;
+
+// Customer Support contracts
+export const SupportChannelValues = [
+  "EMAIL",
+  "CHAT",
+  "FORM",
+  "PHONE",
+  "SOCIAL",
+] as const;
+export type SupportChannel = (typeof SupportChannelValues)[number];
+export const SupportChannelSchema = z.enum(SupportChannelValues);
+
+export const SupportPriorityValues = ["LOW", "NORMAL", "HIGH", "URGENT"] as const;
+export type SupportPriority = (typeof SupportPriorityValues)[number];
+export const SupportPrioritySchema = z.enum(SupportPriorityValues);
+
+export const SupportTicketStatusValues = [
+  "OPEN",
+  "IN_PROGRESS",
+  "WAITING_CUSTOMER",
+  "RESOLVED",
+  "CLOSED",
+] as const;
+export type SupportTicketStatus = (typeof SupportTicketStatusValues)[number];
+export const SupportTicketStatusSchema = z.enum(SupportTicketStatusValues);
+
+export const SupportTicketSchema = z.object({
+  contract_type: z.literal("support_ticket"),
+  tenant_id: z.string(),
+  channel: SupportChannelSchema,
+  customer_email: z.string().nullable(),
+  customer_name: z.string().nullable(),
+  subject: z.string().nullable(),
+  body: z.string(),
+  priority: SupportPrioritySchema,
+  status: SupportTicketStatusSchema,
+});
+export type SupportTicket = z.infer<typeof SupportTicketSchema>;
+
+// Approval Queue contracts
+export const ApprovalRequestStatusValues = [
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "ESCALATED",
+  "EXPIRED",
+] as const;
+export type ApprovalRequestStatus = (typeof ApprovalRequestStatusValues)[number];
+export const ApprovalRequestStatusSchema = z.enum(ApprovalRequestStatusValues);
+
+export const ApprovalRequestSchema = z.object({
+  contract_type: z.literal("approval_request"),
+  tenant_id: z.string(),
+  agent_id: z.string(),
+  department_id: z.string().nullable(),
+  action_type: z.string(),
+  risk_level: RiskLevelSchema,
+  estimated_cost_gbp: z.number().nullable(),
+  reason: z.string(),
+  required_approval_level: ApprovalLevelSchema,
+  status: ApprovalRequestStatusSchema,
+});
+export type ApprovalRequest = z.infer<typeof ApprovalRequestSchema>;
+
+export const ApprovalDecisionValueValues = ["APPROVED", "REJECTED"] as const;
+export type ApprovalDecisionValue = (typeof ApprovalDecisionValueValues)[number];
+export const ApprovalDecisionValueSchema = z.enum(ApprovalDecisionValueValues);
+
+export const ApprovalDecisionSchema = z.object({
+  contract_type: z.literal("approval_decision"),
+  approval_id: z.string(),
+  approver_id: z.string(),
+  decision: ApprovalDecisionValueSchema,
+  comment: z.string().nullable(),
+});
+export type ApprovalDecision = z.infer<typeof ApprovalDecisionSchema>;

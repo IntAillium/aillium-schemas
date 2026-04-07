@@ -560,3 +560,181 @@ class HeartbeatReport(BaseModel):
     agent_id: str | None = None
     timestamp: datetime
     metrics: HeartbeatMetrics
+
+
+# EOD Report contracts
+
+
+class EodReport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["eod_report"]
+    tenant_id: str
+    report_date: datetime
+    tasks_completed: int
+    tasks_failed: int
+    tasks_in_progress: int
+    approvals_processed: int
+    approvals_pending: int
+    payments_processed_gbp: float
+    invoices_created_gbp: float
+    total_cost_gbp: float
+    alerts_raised: int
+    department_breakdown: dict[str, Any] | None = None
+    key_decisions: list[dict[str, Any]] | None = None
+    summary: str | None = None
+
+
+# OOO Session State contracts
+
+
+class EscalationPolicy(str, Enum):
+    QUEUE_ALL = "QUEUE_ALL"
+    DELEGATE_LOW_RISK = "DELEGATE_LOW_RISK"
+    DELEGATE_ALL = "DELEGATE_ALL"
+    EMERGENCY_ONLY = "EMERGENCY_ONLY"
+
+
+class OooSessionState(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["ooo_session_state"]
+    tenant_id: str
+    user_id: str
+    is_active: bool
+    escalation_policy: EscalationPolicy
+    delegate_agent_id: str | None = None
+    auto_response_message: str | None = None
+    expected_return_at: datetime | None = None
+    total_queued: int
+    total_auto_approved: int
+    total_delegated: int
+
+
+# CRM contracts
+
+
+class CrmContactSource(str, Enum):
+    MANUAL = "MANUAL"
+    EMAIL = "EMAIL"
+    FORM = "FORM"
+    IMPORT = "IMPORT"
+    AGENT_DISCOVERED = "AGENT_DISCOVERED"
+
+
+class CrmContact(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["crm_contact"]
+    tenant_id: str
+    name: str
+    email: str | None = None
+    phone: str | None = None
+    company: str | None = None
+    role: str | None = None
+    source: CrmContactSource
+    tags: list[str] | None = None
+
+
+class CrmDealStage(str, Enum):
+    LEAD = "LEAD"
+    QUALIFIED = "QUALIFIED"
+    PROPOSAL = "PROPOSAL"
+    NEGOTIATION = "NEGOTIATION"
+    WON = "WON"
+    LOST = "LOST"
+
+
+class CrmDeal(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["crm_deal"]
+    tenant_id: str
+    contact_id: str
+    title: str
+    value_gbp: float
+    stage: CrmDealStage
+    pipeline: str
+    expected_close_date: str | None = None
+    assigned_agent_id: str | None = None
+
+
+# Customer Support contracts
+
+
+class SupportChannel(str, Enum):
+    EMAIL = "EMAIL"
+    CHAT = "CHAT"
+    FORM = "FORM"
+    PHONE = "PHONE"
+    SOCIAL = "SOCIAL"
+
+
+class SupportPriority(str, Enum):
+    LOW = "LOW"
+    NORMAL = "NORMAL"
+    HIGH = "HIGH"
+    URGENT = "URGENT"
+
+
+class SupportTicketStatus(str, Enum):
+    OPEN = "OPEN"
+    IN_PROGRESS = "IN_PROGRESS"
+    WAITING_CUSTOMER = "WAITING_CUSTOMER"
+    RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
+
+
+class SupportTicket(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["support_ticket"]
+    tenant_id: str
+    channel: SupportChannel
+    customer_email: str | None = None
+    customer_name: str | None = None
+    subject: str | None = None
+    body: str
+    priority: SupportPriority
+    status: SupportTicketStatus
+
+
+# Approval Queue contracts
+
+
+class ApprovalRequestStatus(str, Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    ESCALATED = "ESCALATED"
+    EXPIRED = "EXPIRED"
+
+
+class ApprovalRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["approval_request"]
+    tenant_id: str
+    agent_id: str
+    department_id: str | None = None
+    action_type: str
+    risk_level: RiskLevel
+    estimated_cost_gbp: float | None = None
+    reason: str
+    required_approval_level: ApprovalLevel
+    status: ApprovalRequestStatus
+
+
+class ApprovalDecisionValue(str, Enum):
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class ApprovalDecision(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["approval_decision"]
+    approval_id: str
+    approver_id: str
+    decision: ApprovalDecisionValue
+    comment: str | None = None
