@@ -282,6 +282,24 @@ export const SkillCandidateSchema = z.object({
 });
 export type SkillCandidate = z.infer<typeof SkillCandidateSchema>;
 
+export const SkillDraftRequestSchema = z.object({
+  contract_type: z.literal('skill_draft_request'),
+  tenant_id: z.string(),
+  candidate: SkillCandidateSchema,
+  base_prompt: z.string().optional(),
+  allowed_tools: z.array(z.string()).optional(),
+  approval_rules: z.object({
+    require_approval: z.boolean().optional(),
+    approval_level: ApprovalLevelSchema.optional(),
+    max_auto_approve_gbp: z.number().optional(),
+  }).optional(),
+  risk_level: RiskLevelSchema.optional(),
+  requested_by: z.string().nullable().optional(),
+  priority: z.number().min(0).max(1).optional(),
+});
+export type SkillDraftRequest = z.infer<typeof SkillDraftRequestSchema>;
+
+
 export const SkillValidationResultSchema = z.object({
   contract_type: z.literal("skill_validation_result"),
   draft_id: z.string(),
@@ -489,7 +507,7 @@ export const InvoiceSchema = z.object({
   customer_name: z.string(),
   customer_email: z.string().email(),
   line_items: z.array(InvoiceLineItemSchema).min(1),
-  due_date: z.string(),
+  due_date: z.string().date(),
   reference: z.string().optional(),
   status: InvoiceStatusSchema.optional(),
   subtotal_gbp: z.number().optional(),

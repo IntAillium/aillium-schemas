@@ -310,6 +310,27 @@ class SkillCandidate(BaseModel):
     task_count: int | None = None
 
 
+class SkillDraftRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["skill_draft_request"] = "skill_draft_request"
+    tenant_id: str
+    candidate: SkillCandidate
+    base_prompt: str | None = None
+    allowed_tools: list[str] | None = None
+    approval_rules: dict[str, Any] | None = None
+    risk_level: RiskLevel | None = None
+    requested_by: str | None = None
+    priority: float | None = None
+
+
+class SkillValidationIssue(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    severity: RiskLevel
+    description: str
+
+
 class SkillValidationResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -318,7 +339,7 @@ class SkillValidationResult(BaseModel):
     valid: bool
     tests_run: int
     tests_passed: int
-    issues: list[dict[str, Any]] | None = None
+    issues: list["SkillValidationIssue"] | None = None
 
 
 # Trajectory & Learning Loop contracts
