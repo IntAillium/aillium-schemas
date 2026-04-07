@@ -269,10 +269,10 @@ export const SkillPatternTypeSchema = z.enum(SkillPatternTypeValues);
 // Self-Skill-Creation contracts
 export const SkillCandidateSchema = z.object({
   contract_type: z.literal("skill_candidate"),
-  tenant_id: z.string(),
+  tenant_id: z.string().min(1),
   department_id: z.string().optional(),
-  suggested_name: z.string(),
-  suggested_description: z.string(),
+  suggested_name: z.string().min(1),
+  suggested_description: z.string().min(1),
   suggested_category: z.string().optional(),
   source_task_ids: z.array(z.string()).min(1),
   pattern_type: SkillPatternTypeSchema.optional(),
@@ -284,8 +284,16 @@ export type SkillCandidate = z.infer<typeof SkillCandidateSchema>;
 
 export const SkillDraftRequestSchema = z.object({
   contract_type: z.literal('skill_draft_request'),
-  tenant_id: z.string(),
+  tenant_id: z.string().min(1),
   candidate: SkillCandidateSchema,
+  base_prompt: z.string().optional(),
+  allowed_tools: z.array(z.string()).optional(),
+  approval_rules: z.object({
+    require_approval: z.boolean().optional(),
+    approval_level: ApprovalLevelSchema.optional(),
+    max_auto_approve_gbp: z.number().optional(),
+  }).optional(),
+  risk_level: RiskLevelSchema.optional(),
   requested_by: z.string().nullable().optional(),
   priority: z.number().min(0).max(1).optional(),
 });
@@ -293,7 +301,7 @@ export type SkillDraftRequest = z.infer<typeof SkillDraftRequestSchema>;
 
 export const SkillValidationResultSchema = z.object({
   contract_type: z.literal("skill_validation_result"),
-  draft_id: z.string(),
+  draft_id: z.string().min(1),
   valid: z.boolean(),
   tests_run: z.number().int().min(0),
   tests_passed: z.number().int().min(0),
@@ -328,8 +336,8 @@ export const TrajectoryMetricsSchema = z.object({
 
 export const TrajectoryRecordSchema = z.object({
   contract_type: z.literal("trajectory_record"),
-  tenant_id: z.string(),
-  task_id: z.string(),
+  tenant_id: z.string().min(1),
+  task_id: z.string().min(1),
   agent_id: z.string().optional(),
   department_id: z.string().optional(),
   skill_id: z.string().optional(),
@@ -352,8 +360,8 @@ export type GradientUpdate = z.infer<typeof GradientUpdateSchema>;
 
 export const LearningEvaluationSchema = z.object({
   contract_type: z.literal("learning_evaluation"),
-  tenant_id: z.string(),
-  evaluation_id: z.string(),
+  tenant_id: z.string().min(1),
+  evaluation_id: z.string().min(1),
   department_id: z.string().optional(),
   period_start: z.string().datetime(),
   period_end: z.string().datetime(),
@@ -384,9 +392,9 @@ export const GovernancePolicySchema = z.object({
   id: z.string().optional(),
   tenant_id: z.string().optional(),
   department_id: z.string().optional(),
-  name: z.string(),
+  name: z.string().min(1),
   description: z.string().optional(),
-  action_pattern: z.string(),
+  action_pattern: z.string().min(1),
   max_amount_gbp: z.number().min(0).optional(),
   risk_threshold: RiskLevelSchema,
   requires_approval: z.boolean(),
@@ -399,10 +407,10 @@ export type GovernancePolicy = z.infer<typeof GovernancePolicySchema>;
 
 export const ActionEvaluationRequestSchema = z.object({
   contract_type: z.literal("action_evaluation_request"),
-  tenant_id: z.string(),
-  agent_id: z.string(),
+  tenant_id: z.string().min(1),
+  agent_id: z.string().min(1),
   department_id: z.string().optional(),
-  action_type: z.string(),
+  action_type: z.string().min(1),
   action_payload: z.record(z.unknown()).optional(),
   risk_level: RiskLevelSchema,
   estimated_cost_gbp: z.number().min(0).optional(),
@@ -423,8 +431,8 @@ export type ActionEvaluationResult = z.infer<typeof ActionEvaluationResultSchema
 // Tool Library contracts
 export const ToolDefinitionSchema = z.object({
   contract_type: z.literal("tool_definition"),
-  name: z.string(),
-  description: z.string(),
+  name: z.string().min(1),
+  description: z.string().min(1),
   category: ToolCategorySchema,
   risk_level: RiskLevelSchema,
   input_schema: z.record(z.unknown()),
@@ -437,12 +445,12 @@ export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
 
 export const ToolExecutionRequestSchema = z.object({
   contract_type: z.literal("tool_execution_request"),
-  tenant_id: z.string(),
-  agent_id: z.string(),
-  tool_name: z.string(),
+  tenant_id: z.string().min(1),
+  agent_id: z.string().min(1),
+  tool_name: z.string().min(1),
   parameters: z.record(z.unknown()),
   capsule_id: z.string().optional(),
-  trace_id: z.string(),
+  trace_id: z.string().min(1),
 });
 export type ToolExecutionRequest = z.infer<typeof ToolExecutionRequestSchema>;
 
@@ -467,14 +475,14 @@ export type ToolExecutionResult = z.infer<typeof ToolExecutionResultSchema>;
 // UK/GBP Payment contracts
 export const PaymentIntentSchema = z.object({
   contract_type: z.literal("payment_intent"),
-  tenant_id: z.string(),
-  agent_id: z.string(),
+  tenant_id: z.string().min(1),
+  agent_id: z.string().min(1),
   department_id: z.string().optional(),
-  recipient_name: z.string(),
+  recipient_name: z.string().min(1),
   recipient_email: z.string().email().optional(),
   amount_gbp: z.number().positive(),
   currency: z.literal("GBP"),
-  description: z.string(),
+  description: z.string().min(1),
   reference: z.string().optional(),
   payment_method: PaymentMethodSchema,
   include_vat: z.boolean(),
@@ -485,7 +493,7 @@ export const PaymentIntentSchema = z.object({
 export type PaymentIntent = z.infer<typeof PaymentIntentSchema>;
 
 export const InvoiceLineItemSchema = z.object({
-  description: z.string(),
+  description: z.string().min(1),
   quantity: z.number().positive(),
   unit_price_gbp: z.number().min(0),
   vat_rate: z.number().min(0).max(1).default(0.2),
@@ -493,12 +501,12 @@ export const InvoiceLineItemSchema = z.object({
 
 export const InvoiceSchema = z.object({
   contract_type: z.literal("invoice"),
-  tenant_id: z.string(),
-  agent_id: z.string(),
-  customer_name: z.string(),
+  tenant_id: z.string().min(1),
+  agent_id: z.string().min(1),
+  customer_name: z.string().min(1),
   customer_email: z.string().email(),
   line_items: z.array(InvoiceLineItemSchema).min(1),
-  due_date: z.string(),
+  due_date: z.string().date(),
   reference: z.string().optional(),
   status: InvoiceStatusSchema.optional(),
   subtotal_gbp: z.number().optional(),
@@ -510,7 +518,7 @@ export type Invoice = z.infer<typeof InvoiceSchema>;
 // Heartbeat contracts
 export const HeartbeatReportSchema = z.object({
   contract_type: z.literal("heartbeat_report"),
-  tenant_id: z.string(),
+  tenant_id: z.string().min(1),
   agent_id: z.string().optional(),
   timestamp: z.string().datetime(),
   metrics: z.object({
@@ -532,7 +540,7 @@ export type HeartbeatReport = z.infer<typeof HeartbeatReportSchema>;
 // EOD Report contracts
 export const EodReportSchema = z.object({
   contract_type: z.literal("eod_report"),
-  tenant_id: z.string(),
+  tenant_id: z.string().min(1),
   report_date: z.string().datetime(),
   tasks_completed: z.number().int(),
   tasks_failed: z.number().int(),
@@ -563,8 +571,8 @@ export const EscalationPolicySchema = z.enum(EscalationPolicyValues);
 
 export const OooSessionStateSchema = z.object({
   contract_type: z.literal("ooo_session_state"),
-  tenant_id: z.string(),
-  user_id: z.string(),
+  tenant_id: z.string().min(1),
+  user_id: z.string().min(1),
   is_active: z.boolean(),
   escalation_policy: EscalationPolicySchema,
   delegate_agent_id: z.string().nullable(),
@@ -589,8 +597,8 @@ export const CrmContactSourceSchema = z.enum(CrmContactSourceValues);
 
 export const CrmContactSchema = z.object({
   contract_type: z.literal("crm_contact"),
-  tenant_id: z.string(),
-  name: z.string(),
+  tenant_id: z.string().min(1),
+  name: z.string().min(1),
   email: z.string().nullable(),
   phone: z.string().nullable(),
   company: z.string().nullable(),
@@ -613,12 +621,12 @@ export const CrmDealStageSchema = z.enum(CrmDealStageValues);
 
 export const CrmDealSchema = z.object({
   contract_type: z.literal("crm_deal"),
-  tenant_id: z.string(),
-  contact_id: z.string(),
-  title: z.string(),
+  tenant_id: z.string().min(1),
+  contact_id: z.string().min(1),
+  title: z.string().min(1),
   value_gbp: z.number(),
   stage: CrmDealStageSchema,
-  pipeline: z.string(),
+  pipeline: z.string().min(1),
   expected_close_date: z.string().nullable(),
   assigned_agent_id: z.string().nullable(),
 });
@@ -651,12 +659,12 @@ export const SupportTicketStatusSchema = z.enum(SupportTicketStatusValues);
 
 export const SupportTicketSchema = z.object({
   contract_type: z.literal("support_ticket"),
-  tenant_id: z.string(),
+  tenant_id: z.string().min(1),
   channel: SupportChannelSchema,
   customer_email: z.string().nullable(),
   customer_name: z.string().nullable(),
   subject: z.string().nullable(),
-  body: z.string(),
+  body: z.string().min(1),
   priority: SupportPrioritySchema,
   status: SupportTicketStatusSchema,
 });
@@ -675,13 +683,13 @@ export const ApprovalRequestStatusSchema = z.enum(ApprovalRequestStatusValues);
 
 export const ApprovalRequestSchema = z.object({
   contract_type: z.literal("approval_request"),
-  tenant_id: z.string(),
-  agent_id: z.string(),
+  tenant_id: z.string().min(1),
+  agent_id: z.string().min(1),
   department_id: z.string().nullable(),
-  action_type: z.string(),
+  action_type: z.string().min(1),
   risk_level: RiskLevelSchema,
   estimated_cost_gbp: z.number().nullable(),
-  reason: z.string(),
+  reason: z.string().min(1),
   required_approval_level: ApprovalLevelSchema,
   status: ApprovalRequestStatusSchema,
 });
@@ -693,8 +701,8 @@ export const ApprovalDecisionValueSchema = z.enum(ApprovalDecisionValueValues);
 
 export const ApprovalDecisionSchema = z.object({
   contract_type: z.literal("approval_decision"),
-  approval_id: z.string(),
-  approver_id: z.string(),
+  approval_id: z.string().min(1),
+  approver_id: z.string().min(1),
   decision: ApprovalDecisionValueSchema,
   comment: z.string().nullable(),
 });

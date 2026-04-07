@@ -298,10 +298,10 @@ class SkillCandidate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["skill_candidate"]
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     department_id: str | None = None
-    suggested_name: str
-    suggested_description: str
+    suggested_name: str = Field(min_length=1)
+    suggested_description: str = Field(min_length=1)
     suggested_category: str | None = None
     source_task_ids: list[str]
     pattern_type: SkillPatternType | None = None
@@ -314,21 +314,32 @@ class SkillDraftRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["skill_draft_request"] = "skill_draft_request"
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     candidate: SkillCandidate
+    base_prompt: str | None = None
+    allowed_tools: list[str] | None = None
+    approval_rules: dict[str, Any] | None = None
+    risk_level: RiskLevel | None = None
     requested_by: str | None = None
     priority: float | None = None
+
+
+class SkillValidationIssue(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    severity: RiskLevel
+    description: str
 
 
 class SkillValidationResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["skill_validation_result"]
-    draft_id: str
+    draft_id: str = Field(min_length=1)
     valid: bool
     tests_run: int
     tests_passed: int
-    issues: list[dict[str, Any]] | None = None
+    issues: list["SkillValidationIssue"] | None = None
 
 
 # Trajectory & Learning Loop contracts
@@ -359,8 +370,8 @@ class TrajectoryRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["trajectory_record"]
-    tenant_id: str
-    task_id: str
+    tenant_id: str = Field(min_length=1)
+    task_id: str = Field(min_length=1)
     agent_id: str | None = None
     department_id: str | None = None
     skill_id: str | None = None
@@ -395,8 +406,8 @@ class LearningEvaluation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["learning_evaluation"]
-    tenant_id: str
-    evaluation_id: str
+    tenant_id: str = Field(min_length=1)
+    evaluation_id: str = Field(min_length=1)
     department_id: str | None = None
     period_start: datetime
     period_end: datetime
@@ -415,9 +426,9 @@ class GovernancePolicy(BaseModel):
     id: str | None = None
     tenant_id: str | None = None
     department_id: str | None = None
-    name: str
+    name: str = Field(min_length=1)
     description: str | None = None
-    action_pattern: str
+    action_pattern: str = Field(min_length=1)
     max_amount_gbp: float | None = None
     risk_threshold: RiskLevel
     requires_approval: bool
@@ -431,10 +442,10 @@ class ActionEvaluationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["action_evaluation_request"]
-    tenant_id: str
-    agent_id: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
     department_id: str | None = None
-    action_type: str
+    action_type: str = Field(min_length=1)
     action_payload: dict[str, Any] | None = None
     risk_level: RiskLevel
     estimated_cost_gbp: float | None = None
@@ -459,8 +470,8 @@ class ToolDefinition(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["tool_definition"]
-    name: str
-    description: str
+    name: str = Field(min_length=1)
+    description: str = Field(min_length=1)
     category: ToolCategory
     risk_level: RiskLevel
     input_schema: dict[str, Any]
@@ -474,12 +485,12 @@ class ToolExecutionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["tool_execution_request"]
-    tenant_id: str
-    agent_id: str
-    tool_name: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
+    tool_name: str = Field(min_length=1)
     parameters: dict[str, Any]
     capsule_id: str | None = None
-    trace_id: str
+    trace_id: str = Field(min_length=1)
 
 
 class ToolExecutionResult(BaseModel):
@@ -489,8 +500,8 @@ class ToolExecutionResult(BaseModel):
     success: bool
     output: Any | None = None
     artifacts: list[dict[str, str]] | None = None
-    duration_ms: float
-    token_cost: int | None = None
+    duration_ms: float = Field(ge=0)
+    token_cost: int | None = Field(default=None, ge=0)
     error: str | None = None
 
 
@@ -500,28 +511,28 @@ class ToolExecutionResult(BaseModel):
 class InvoiceLineItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    description: str
-    quantity: float
-    unit_price_gbp: float
-    vat_rate: float = 0.2
+    description: str = Field(min_length=1)
+    quantity: float = Field(gt=0)
+    unit_price_gbp: float = Field(ge=0)
+    vat_rate: float = Field(default=0.2, ge=0, le=1)
 
 
 class PaymentIntent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["payment_intent"]
-    tenant_id: str
-    agent_id: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
     department_id: str | None = None
-    recipient_name: str
+    recipient_name: str = Field(min_length=1)
     recipient_email: str | None = None
-    amount_gbp: float
+    amount_gbp: float = Field(gt=0)
     currency: Literal["GBP"]
-    description: str
+    description: str = Field(min_length=1)
     reference: str | None = None
     payment_method: PaymentMethod
     include_vat: bool
-    vat_rate: float = 0.2
+    vat_rate: float = Field(default=0.2, ge=0, le=1)
     status: PaymentStatus | None = None
     metadata: dict[str, Any] | None = None
 
@@ -530,9 +541,9 @@ class Invoice(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["invoice"]
-    tenant_id: str
-    agent_id: str
-    customer_name: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
+    customer_name: str = Field(min_length=1)
     customer_email: str
     line_items: list[InvoiceLineItem]
     due_date: str
@@ -566,7 +577,7 @@ class HeartbeatReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["heartbeat_report"]
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     agent_id: str | None = None
     timestamp: datetime
     metrics: HeartbeatMetrics
@@ -579,7 +590,7 @@ class EodReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["eod_report"]
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     report_date: datetime
     tasks_completed: int
     tasks_failed: int
@@ -609,8 +620,8 @@ class OooSessionState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["ooo_session_state"]
-    tenant_id: str
-    user_id: str
+    tenant_id: str = Field(min_length=1)
+    user_id: str = Field(min_length=1)
     is_active: bool
     escalation_policy: EscalationPolicy
     delegate_agent_id: str | None = None
@@ -636,8 +647,8 @@ class CrmContact(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["crm_contact"]
-    tenant_id: str
-    name: str
+    tenant_id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
     email: str | None = None
     phone: str | None = None
     company: str | None = None
@@ -659,12 +670,12 @@ class CrmDeal(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["crm_deal"]
-    tenant_id: str
-    contact_id: str
-    title: str
+    tenant_id: str = Field(min_length=1)
+    contact_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
     value_gbp: float
     stage: CrmDealStage
-    pipeline: str
+    pipeline: str = Field(min_length=1)
     expected_close_date: str | None = None
     assigned_agent_id: str | None = None
 
@@ -699,12 +710,12 @@ class SupportTicket(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["support_ticket"]
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     channel: SupportChannel
     customer_email: str | None = None
     customer_name: str | None = None
     subject: str | None = None
-    body: str
+    body: str = Field(min_length=1)
     priority: SupportPriority
     status: SupportTicketStatus
 
@@ -724,13 +735,13 @@ class ApprovalRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["approval_request"]
-    tenant_id: str
-    agent_id: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
     department_id: str | None = None
-    action_type: str
+    action_type: str = Field(min_length=1)
     risk_level: RiskLevel
     estimated_cost_gbp: float | None = None
-    reason: str
+    reason: str = Field(min_length=1)
     required_approval_level: ApprovalLevel
     status: ApprovalRequestStatus
 
@@ -744,7 +755,7 @@ class ApprovalDecision(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["approval_decision"]
-    approval_id: str
-    approver_id: str
+    approval_id: str = Field(min_length=1)
+    approver_id: str = Field(min_length=1)
     decision: ApprovalDecisionValue
     comment: str | None = None
