@@ -521,18 +521,18 @@ class PaymentIntent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["payment_intent"]
-    tenant_id: str
-    agent_id: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
     department_id: str | None = None
-    recipient_name: str
+    recipient_name: str = Field(min_length=1)
     recipient_email: str | None = None
-    amount_gbp: float
+    amount_gbp: float = Field(gt=0)
     currency: Literal["GBP"]
-    description: str
+    description: str = Field(min_length=1)
     reference: str | None = None
     payment_method: PaymentMethod
     include_vat: bool
-    vat_rate: float = 0.2
+    vat_rate: float = Field(default=0.2, ge=0, le=1)
     status: PaymentStatus | None = None
     metadata: dict[str, Any] | None = None
 
@@ -541,9 +541,9 @@ class Invoice(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["invoice"]
-    tenant_id: str
-    agent_id: str
-    customer_name: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
+    customer_name: str = Field(min_length=1)
     customer_email: str
     line_items: list[InvoiceLineItem]
     due_date: str
@@ -577,7 +577,7 @@ class HeartbeatReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["heartbeat_report"]
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     agent_id: str | None = None
     timestamp: datetime
     metrics: HeartbeatMetrics
@@ -590,7 +590,7 @@ class EodReport(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["eod_report"]
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     report_date: datetime
     tasks_completed: int
     tasks_failed: int
@@ -620,8 +620,8 @@ class OooSessionState(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["ooo_session_state"]
-    tenant_id: str
-    user_id: str
+    tenant_id: str = Field(min_length=1)
+    user_id: str = Field(min_length=1)
     is_active: bool
     escalation_policy: EscalationPolicy
     delegate_agent_id: str | None = None
@@ -647,8 +647,8 @@ class CrmContact(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["crm_contact"]
-    tenant_id: str
-    name: str
+    tenant_id: str = Field(min_length=1)
+    name: str = Field(min_length=1)
     email: str | None = None
     phone: str | None = None
     company: str | None = None
@@ -670,12 +670,12 @@ class CrmDeal(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["crm_deal"]
-    tenant_id: str
-    contact_id: str
-    title: str
+    tenant_id: str = Field(min_length=1)
+    contact_id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
     value_gbp: float
     stage: CrmDealStage
-    pipeline: str
+    pipeline: str = Field(min_length=1)
     expected_close_date: str | None = None
     assigned_agent_id: str | None = None
 
@@ -710,12 +710,12 @@ class SupportTicket(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["support_ticket"]
-    tenant_id: str
+    tenant_id: str = Field(min_length=1)
     channel: SupportChannel
     customer_email: str | None = None
     customer_name: str | None = None
     subject: str | None = None
-    body: str
+    body: str = Field(min_length=1)
     priority: SupportPriority
     status: SupportTicketStatus
 
@@ -735,13 +735,13 @@ class ApprovalRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["approval_request"]
-    tenant_id: str
-    agent_id: str
+    tenant_id: str = Field(min_length=1)
+    agent_id: str = Field(min_length=1)
     department_id: str | None = None
-    action_type: str
+    action_type: str = Field(min_length=1)
     risk_level: RiskLevel
     estimated_cost_gbp: float | None = None
-    reason: str
+    reason: str = Field(min_length=1)
     required_approval_level: ApprovalLevel
     status: ApprovalRequestStatus
 
