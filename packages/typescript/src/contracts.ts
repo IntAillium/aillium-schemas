@@ -282,6 +282,15 @@ export const SkillCandidateSchema = z.object({
 });
 export type SkillCandidate = z.infer<typeof SkillCandidateSchema>;
 
+export const SkillDraftRequestSchema = z.object({
+  contract_type: z.literal('skill_draft_request'),
+  tenant_id: z.string(),
+  candidate: SkillCandidateSchema,
+  requested_by: z.string().nullable().optional(),
+  priority: z.number().min(0).max(1).optional(),
+});
+export type SkillDraftRequest = z.infer<typeof SkillDraftRequestSchema>;
+
 export const SkillValidationResultSchema = z.object({
   contract_type: z.literal("skill_validation_result"),
   draft_id: z.string(),

@@ -310,6 +310,16 @@ class SkillCandidate(BaseModel):
     task_count: int | None = None
 
 
+class SkillDraftRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["skill_draft_request"] = "skill_draft_request"
+    tenant_id: str
+    candidate: SkillCandidate
+    requested_by: str | None = None
+    priority: float | None = None
+
+
 class SkillValidationResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
