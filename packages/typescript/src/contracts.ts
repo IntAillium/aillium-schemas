@@ -194,3 +194,328 @@ export const OpenMeterEventSchema = z.discriminatedUnion("event_type", [
   ActiveDeviceEventSchema,
 ]);
 export type OpenMeterEvent = z.infer<typeof OpenMeterEventSchema>;
+
+// ---------------------------------------------------------------------------
+// Aillium 2.0 Autonomous Agent Contracts
+// ---------------------------------------------------------------------------
+
+// Enums
+export const ToolCategoryValues = [
+  "BROWSER_AUTOMATION",
+  "GUI_AUTOMATION",
+  "SEARCH",
+  "COMMUNICATION",
+  "FILE_OPERATION",
+  "DATA_PROCESSING",
+  "PAYMENT",
+  "CALENDAR",
+  "CODE_EXECUTION",
+  "KNOWLEDGE",
+  "CUSTOM",
+] as const;
+export type ToolCategory = (typeof ToolCategoryValues)[number];
+export const ToolCategorySchema = z.enum(ToolCategoryValues);
+
+export const ApprovalLevelValues = [
+  "NONE",
+  "DEPARTMENT_MANAGER",
+  "OWNER",
+  "MULTI_PARTY",
+] as const;
+export type ApprovalLevel = (typeof ApprovalLevelValues)[number];
+export const ApprovalLevelSchema = z.enum(ApprovalLevelValues);
+
+export const PaymentMethodValues = [
+  "STRIPE_CARD",
+  "OPEN_BANKING",
+  "DIRECT_DEBIT",
+  "BANK_TRANSFER",
+] as const;
+export type PaymentMethod = (typeof PaymentMethodValues)[number];
+export const PaymentMethodSchema = z.enum(PaymentMethodValues);
+
+export const PaymentStatusValues = [
+  "PENDING",
+  "AWAITING_APPROVAL",
+  "PROCESSING",
+  "COMPLETED",
+  "FAILED",
+  "CANCELLED",
+  "REFUNDED",
+] as const;
+export type PaymentStatus = (typeof PaymentStatusValues)[number];
+export const PaymentStatusSchema = z.enum(PaymentStatusValues);
+
+export const InvoiceStatusValues = [
+  "DRAFT",
+  "SENT",
+  "PAID",
+  "OVERDUE",
+  "CANCELLED",
+  "VOID",
+] as const;
+export type InvoiceStatus = (typeof InvoiceStatusValues)[number];
+export const InvoiceStatusSchema = z.enum(InvoiceStatusValues);
+
+export const SkillPatternTypeValues = [
+  "RECURRING_WORKFLOW",
+  "FAILED_TASK_RECOVERY",
+  "MANUAL_WORKAROUND",
+  "MULTI_STEP_OPTIMIZATION",
+] as const;
+export type SkillPatternType = (typeof SkillPatternTypeValues)[number];
+export const SkillPatternTypeSchema = z.enum(SkillPatternTypeValues);
+
+// Self-Skill-Creation contracts
+export const SkillCandidateSchema = z.object({
+  contract_type: z.literal("skill_candidate"),
+  tenant_id: z.string(),
+  department_id: z.string().optional(),
+  suggested_name: z.string(),
+  suggested_description: z.string(),
+  suggested_category: z.string().optional(),
+  source_task_ids: z.array(z.string()).min(1),
+  pattern_type: SkillPatternTypeSchema.optional(),
+  confidence: z.number().min(0).max(1),
+  estimated_time_saved_minutes: z.number().min(0).optional(),
+  task_count: z.number().int().min(1).optional(),
+});
+export type SkillCandidate = z.infer<typeof SkillCandidateSchema>;
+
+export const SkillValidationResultSchema = z.object({
+  contract_type: z.literal("skill_validation_result"),
+  draft_id: z.string(),
+  valid: z.boolean(),
+  tests_run: z.number().int().min(0),
+  tests_passed: z.number().int().min(0),
+  issues: z
+    .array(
+      z.object({
+        severity: RiskLevelSchema,
+        description: z.string(),
+      }),
+    )
+    .optional(),
+});
+export type SkillValidationResult = z.infer<typeof SkillValidationResultSchema>;
+
+// Trajectory & Learning Loop contracts
+export const TrajectoryActionSchema = z.object({
+  tool_name: z.string(),
+  parameters: z.record(z.unknown()).optional(),
+  result: z.record(z.unknown()).optional(),
+  duration_ms: z.number().optional(),
+  timestamp: z.string().datetime().optional(),
+});
+
+export const TrajectoryMetricsSchema = z.object({
+  duration_ms: z.number(),
+  token_count: z.number().int().optional(),
+  cost_units: z.number().optional(),
+  success: z.boolean(),
+  retry_count: z.number().int().min(0).optional(),
+  cost_gbp: z.number().optional(),
+});
+
+export const TrajectoryRecordSchema = z.object({
+  contract_type: z.literal("trajectory_record"),
+  tenant_id: z.string(),
+  task_id: z.string(),
+  agent_id: z.string().optional(),
+  department_id: z.string().optional(),
+  skill_id: z.string().optional(),
+  inputs: z.record(z.unknown()),
+  actions: z.array(TrajectoryActionSchema),
+  outputs: z.record(z.unknown()),
+  metrics: TrajectoryMetricsSchema,
+});
+export type TrajectoryRecord = z.infer<typeof TrajectoryRecordSchema>;
+
+export const GradientUpdateSchema = z.object({
+  target_type: z.enum(["PROMPT", "TOOL_SELECTION", "APPROVAL_RULE"]),
+  target_id: z.string(),
+  current_value: z.string(),
+  suggested_value: z.string(),
+  reason: z.string(),
+  confidence: z.number().min(0).max(1),
+});
+export type GradientUpdate = z.infer<typeof GradientUpdateSchema>;
+
+export const LearningEvaluationSchema = z.object({
+  contract_type: z.literal("learning_evaluation"),
+  tenant_id: z.string(),
+  evaluation_id: z.string(),
+  department_id: z.string().optional(),
+  period_start: z.string().datetime(),
+  period_end: z.string().datetime(),
+  metrics: z.object({
+    total_trajectories: z.number().int(),
+    success_rate: z.number().min(0).max(1),
+    avg_duration_ms: z.number(),
+    avg_cost_gbp: z.number().optional(),
+    retry_rate: z.number().min(0).max(1),
+  }),
+  underperforming_skills: z
+    .array(
+      z.object({
+        skill_id: z.string(),
+        success_rate: z.number(),
+        gradient_notes: z.string(),
+        suggested_changes: z.string(),
+      }),
+    )
+    .optional(),
+  gradient_updates: z.array(GradientUpdateSchema).optional(),
+});
+export type LearningEvaluation = z.infer<typeof LearningEvaluationSchema>;
+
+// Governance contracts
+export const GovernancePolicySchema = z.object({
+  contract_type: z.literal("governance_policy"),
+  id: z.string().optional(),
+  tenant_id: z.string().optional(),
+  department_id: z.string().optional(),
+  name: z.string(),
+  description: z.string().optional(),
+  action_pattern: z.string(),
+  max_amount_gbp: z.number().min(0).optional(),
+  risk_threshold: RiskLevelSchema,
+  requires_approval: z.boolean(),
+  approval_level: ApprovalLevelSchema,
+  blocked_domains: z.array(z.string()).optional(),
+  allowed_tools: z.array(z.string()).optional(),
+  enabled: z.boolean(),
+});
+export type GovernancePolicy = z.infer<typeof GovernancePolicySchema>;
+
+export const ActionEvaluationRequestSchema = z.object({
+  contract_type: z.literal("action_evaluation_request"),
+  tenant_id: z.string(),
+  agent_id: z.string(),
+  department_id: z.string().optional(),
+  action_type: z.string(),
+  action_payload: z.record(z.unknown()).optional(),
+  risk_level: RiskLevelSchema,
+  estimated_cost_gbp: z.number().min(0).optional(),
+});
+export type ActionEvaluationRequest = z.infer<typeof ActionEvaluationRequestSchema>;
+
+export const ActionEvaluationResultSchema = z.object({
+  contract_type: z.literal("action_evaluation_result"),
+  permitted: z.boolean(),
+  requires_approval: z.boolean(),
+  approval_level: ApprovalLevelSchema,
+  reason: z.string(),
+  matched_policies: z.array(z.string()).optional(),
+  conditions: z.array(z.string()).optional(),
+});
+export type ActionEvaluationResult = z.infer<typeof ActionEvaluationResultSchema>;
+
+// Tool Library contracts
+export const ToolDefinitionSchema = z.object({
+  contract_type: z.literal("tool_definition"),
+  name: z.string(),
+  description: z.string(),
+  category: ToolCategorySchema,
+  risk_level: RiskLevelSchema,
+  input_schema: z.record(z.unknown()),
+  output_schema: z.record(z.unknown()).optional(),
+  requires_approval: z.boolean(),
+  requires_capsule: z.boolean(),
+  enabled: z.boolean(),
+});
+export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
+
+export const ToolExecutionRequestSchema = z.object({
+  contract_type: z.literal("tool_execution_request"),
+  tenant_id: z.string(),
+  agent_id: z.string(),
+  tool_name: z.string(),
+  parameters: z.record(z.unknown()),
+  capsule_id: z.string().optional(),
+  trace_id: z.string(),
+});
+export type ToolExecutionRequest = z.infer<typeof ToolExecutionRequestSchema>;
+
+export const ToolExecutionResultSchema = z.object({
+  contract_type: z.literal("tool_execution_result"),
+  success: z.boolean(),
+  output: z.unknown().optional(),
+  artifacts: z
+    .array(
+      z.object({
+        uri: z.string(),
+        content_type: z.string(),
+      }),
+    )
+    .optional(),
+  duration_ms: z.number().min(0),
+  token_cost: z.number().int().min(0).optional(),
+  error: z.string().optional(),
+});
+export type ToolExecutionResult = z.infer<typeof ToolExecutionResultSchema>;
+
+// UK/GBP Payment contracts
+export const PaymentIntentSchema = z.object({
+  contract_type: z.literal("payment_intent"),
+  tenant_id: z.string(),
+  agent_id: z.string(),
+  department_id: z.string().optional(),
+  recipient_name: z.string(),
+  recipient_email: z.string().email().optional(),
+  amount_gbp: z.number().positive(),
+  currency: z.literal("GBP"),
+  description: z.string(),
+  reference: z.string().optional(),
+  payment_method: PaymentMethodSchema,
+  include_vat: z.boolean(),
+  vat_rate: z.number().min(0).max(1).default(0.2),
+  status: PaymentStatusSchema.optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
+export type PaymentIntent = z.infer<typeof PaymentIntentSchema>;
+
+export const InvoiceLineItemSchema = z.object({
+  description: z.string(),
+  quantity: z.number().positive(),
+  unit_price_gbp: z.number().min(0),
+  vat_rate: z.number().min(0).max(1).default(0.2),
+});
+
+export const InvoiceSchema = z.object({
+  contract_type: z.literal("invoice"),
+  tenant_id: z.string(),
+  agent_id: z.string(),
+  customer_name: z.string(),
+  customer_email: z.string().email(),
+  line_items: z.array(InvoiceLineItemSchema).min(1),
+  due_date: z.string(),
+  reference: z.string().optional(),
+  status: InvoiceStatusSchema.optional(),
+  subtotal_gbp: z.number().optional(),
+  vat_gbp: z.number().optional(),
+  total_gbp: z.number().optional(),
+});
+export type Invoice = z.infer<typeof InvoiceSchema>;
+
+// Heartbeat contracts
+export const HeartbeatReportSchema = z.object({
+  contract_type: z.literal("heartbeat_report"),
+  tenant_id: z.string(),
+  agent_id: z.string().optional(),
+  timestamp: z.string().datetime(),
+  metrics: z.object({
+    jobs_pending: z.number().int().min(0).optional(),
+    jobs_claimed: z.number().int().min(0).optional(),
+    jobs_completed: z.number().int().min(0).optional(),
+    jobs_failed: z.number().int().min(0).optional(),
+    cycle_duration_ms: z.number().min(0).optional(),
+    urgent_notifications: z.number().int().min(0).optional(),
+    active_capsules: z.number().int().min(0).optional(),
+    memory_entries: z.number().int().min(0).optional(),
+    skills_count: z.number().int().min(0).optional(),
+    success_rate: z.number().min(0).max(1).optional(),
+    avg_task_duration_ms: z.number().min(0).optional(),
+  }),
+});
+export type HeartbeatReport = z.infer<typeof HeartbeatReportSchema>;

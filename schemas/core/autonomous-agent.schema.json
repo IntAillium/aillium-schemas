@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/core/autonomous-agent.schema.json",
+  "title": "Aillium Autonomous Agent Contracts",
+  "description": "Schema definitions for Aillium 2.0 autonomous agent capabilities: self-skill-creation, learning loop, governance engine, tool library, and UK/GBP payments.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/skill_candidate" },
+    { "$ref": "#/$defs/skill_draft_request" },
+    { "$ref": "#/$defs/skill_validation_result" },
+    { "$ref": "#/$defs/trajectory_record" },
+    { "$ref": "#/$defs/learning_evaluation" },
+    { "$ref": "#/$defs/governance_policy" },
+    { "$ref": "#/$defs/action_evaluation_request" },
+    { "$ref": "#/$defs/action_evaluation_result" },
+    { "$ref": "#/$defs/tool_definition" },
+    { "$ref": "#/$defs/tool_execution_request" },
+    { "$ref": "#/$defs/tool_execution_result" },
+    { "$ref": "#/$defs/payment_intent" },
+    { "$ref": "#/$defs/invoice" },
+    { "$ref": "#/$defs/heartbeat_report" }
+  ],
+  "$defs": {
+    "risk_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["GBP"],
+      "description": "UK/GBP only for Aillium 2.0"
+    },
+    "approval_level": {
+      "type": "string",
+      "enum": ["NONE", "DEPARTMENT_MANAGER", "OWNER", "MULTI_PARTY"]
+    },
+    "tool_category": {
+      "type": "string",
+      "enum": [
+        "BROWSER_AUTOMATION",
+        "GUI_AUTOMATION",
+        "SEARCH",
+        "COMMUNICATION",
+        "FILE_OPERATION",
+        "DATA_PROCESSING",
+        "PAYMENT",
+        "CALENDAR",
+        "CODE_EXECUTION",
+        "KNOWLEDGE",
+        "CUSTOM"
+      ]
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": ["STRIPE_CARD", "OPEN_BANKING", "DIRECT_DEBIT", "BANK_TRANSFER"]
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": ["PENDING", "AWAITING_APPROVAL", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED", "REFUNDED"]
+    },
+    "invoice_status": {
+      "type": "string",
+      "enum": ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED", "VOID"]
+    },
+
+    "skill_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "suggested_name", "suggested_description", "source_task_ids", "confidence"],
+      "properties": {
+        "contract_type": { "const": "skill_candidate" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "department_id": { "type": "string" },
+        "suggested_name": { "type": "string", "minLength": 1 },
+        "suggested_description": { "type": "string", "minLength": 1 },
+        "suggested_category": { "type": "string" },
+        "source_task_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "pattern_type": {
+          "type": "string",
+          "enum": ["RECURRING_WORKFLOW", "FAILED_TASK_RECOVERY", "MANUAL_WORKAROUND", "MULTI_STEP_OPTIMIZATION"]
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "estimated_time_saved_minutes": { "type": "number", "minimum": 0 },
+        "task_count": { "type": "integer", "minimum": 1 }
+      }
+    },
+
+    "skill_draft_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "candidate"],
+      "properties": {
+        "contract_type": { "const": "skill_draft_request" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "candidate": { "$ref": "#/$defs/skill_candidate" },
+        "base_prompt": { "type": "string" },
+        "allowed_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "approval_rules": {
+          "type": "object",
+          "properties": {
+            "require_approval": { "type": "boolean" },
+            "approval_level": { "$ref": "#/$defs/approval_level" },
+            "max_auto_approve_gbp": { "type": "number" }
+          }
+        },
+        "risk_level": { "$ref": "#/$defs/risk_level" }
+      }
+    },
+
+    "skill_validation_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "draft_id", "valid", "tests_run", "tests_passed"],
+      "properties": {
+        "contract_type": { "const": "skill_validation_result" },
+        "draft_id": { "type": "string", "minLength": 1 },
+        "valid": { "type": "boolean" },
+        "tests_run": { "type": "integer", "minimum": 0 },
+        "tests_passed": { "type": "integer", "minimum": 0 },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": { "$ref": "#/$defs/risk_level" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "trajectory_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "task_id", "inputs", "actions", "outputs", "metrics"],
+      "properties": {
+        "contract_type": { "const": "trajectory_record" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "agent_id": { "type": "string" },
+        "department_id": { "type": "string" },
+        "skill_id": { "type": "string" },
+        "inputs": { "type": "object" },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tool_name": { "type": "string" },
+              "parameters": { "type": "object" },
+              "result": { "type": "object" },
+              "duration_ms": { "type": "number" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "outputs": { "type": "object" },
+        "metrics": {
+          "type": "object",
+          "required": ["duration_ms", "success"],
+          "properties": {
+            "duration_ms": { "type": "number" },
+            "token_count": { "type": "integer" },
+            "cost_units": { "type": "number" },
+            "success": { "type": "boolean" },
+            "retry_count": { "type": "integer", "minimum": 0 },
+            "cost_gbp": { "type": "number" }
+          }
+        }
+      }
+    },
+
+    "learning_evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "evaluation_id", "period_start", "period_end", "metrics"],
+      "properties": {
+        "contract_type": { "const": "learning_evaluation" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "evaluation_id": { "type": "string", "minLength": 1 },
+        "department_id": { "type": "string" },
+        "period_start": { "type": "string", "format": "date-time" },
+        "period_end": { "type": "string", "format": "date-time" },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "total_trajectories": { "type": "integer" },
+            "success_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "avg_duration_ms": { "type": "number" },
+            "avg_cost_gbp": { "type": "number" },
+            "retry_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "underperforming_skills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "skill_id": { "type": "string" },
+              "success_rate": { "type": "number" },
+              "gradient_notes": { "type": "string" },
+              "suggested_changes": { "type": "string" }
+            }
+          }
+        },
+        "gradient_updates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "target_type": { "type": "string", "enum": ["PROMPT", "TOOL_SELECTION", "APPROVAL_RULE"] },
+              "target_id": { "type": "string" },
+              "current_value": { "type": "string" },
+              "suggested_value": { "type": "string" },
+              "reason": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+
+    "governance_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "name", "action_pattern", "risk_threshold", "requires_approval", "enabled"],
+      "properties": {
+        "contract_type": { "const": "governance_policy" },
+        "id": { "type": "string" },
+        "tenant_id": { "type": "string" },
+        "department_id": { "type": "string" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "action_pattern": { "type": "string", "minLength": 1, "description": "Glob pattern matching action types" },
+        "max_amount_gbp": { "type": "number", "minimum": 0 },
+        "risk_threshold": { "$ref": "#/$defs/risk_level" },
+        "requires_approval": { "type": "boolean" },
+        "approval_level": { "$ref": "#/$defs/approval_level" },
+        "blocked_domains": { "type": "array", "items": { "type": "string" } },
+        "allowed_tools": { "type": "array", "items": { "type": "string" } },
+        "enabled": { "type": "boolean" }
+      }
+    },
+
+    "action_evaluation_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "agent_id", "action_type", "risk_level"],
+      "properties": {
+        "contract_type": { "const": "action_evaluation_request" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "agent_id": { "type": "string", "minLength": 1 },
+        "department_id": { "type": "string" },
+        "action_type": { "type": "string", "minLength": 1 },
+        "action_payload": { "type": "object" },
+        "risk_level": { "$ref": "#/$defs/risk_level" },
+        "estimated_cost_gbp": { "type": "number", "minimum": 0 }
+      }
+    },
+
+    "action_evaluation_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "permitted", "requires_approval", "approval_level", "reason"],
+      "properties": {
+        "contract_type": { "const": "action_evaluation_result" },
+        "permitted": { "type": "boolean" },
+        "requires_approval": { "type": "boolean" },
+        "approval_level": { "$ref": "#/$defs/approval_level" },
+        "reason": { "type": "string" },
+        "matched_policies": { "type": "array", "items": { "type": "string" } },
+        "conditions": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "tool_definition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "name", "description", "category", "risk_level", "input_schema"],
+      "properties": {
+        "contract_type": { "const": "tool_definition" },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "category": { "$ref": "#/$defs/tool_category" },
+        "risk_level": { "$ref": "#/$defs/risk_level" },
+        "input_schema": { "type": "object", "description": "JSON Schema for tool input" },
+        "output_schema": { "type": "object", "description": "JSON Schema for tool output" },
+        "requires_approval": { "type": "boolean" },
+        "requires_capsule": { "type": "boolean", "description": "Whether tool needs an ExecutionCapsule" },
+        "enabled": { "type": "boolean" }
+      }
+    },
+
+    "tool_execution_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "agent_id", "tool_name", "parameters", "trace_id"],
+      "properties": {
+        "contract_type": { "const": "tool_execution_request" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "agent_id": { "type": "string", "minLength": 1 },
+        "tool_name": { "type": "string", "minLength": 1 },
+        "parameters": { "type": "object" },
+        "capsule_id": { "type": "string" },
+        "trace_id": { "type": "string", "minLength": 1 }
+      }
+    },
+
+    "tool_execution_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "success", "duration_ms"],
+      "properties": {
+        "contract_type": { "const": "tool_execution_result" },
+        "success": { "type": "boolean" },
+        "output": {},
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uri": { "type": "string" },
+              "content_type": { "type": "string" }
+            }
+          }
+        },
+        "duration_ms": { "type": "number", "minimum": 0 },
+        "token_cost": { "type": "integer", "minimum": 0 },
+        "error": { "type": "string" }
+      }
+    },
+
+    "payment_intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "agent_id", "recipient_name", "amount_gbp", "currency", "description", "payment_method"],
+      "properties": {
+        "contract_type": { "const": "payment_intent" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "agent_id": { "type": "string", "minLength": 1 },
+        "department_id": { "type": "string" },
+        "recipient_name": { "type": "string", "minLength": 1 },
+        "recipient_email": { "type": "string", "format": "email" },
+        "amount_gbp": { "type": "number", "exclusiveMinimum": 0 },
+        "currency": { "$ref": "#/$defs/currency" },
+        "description": { "type": "string", "minLength": 1 },
+        "reference": { "type": "string" },
+        "payment_method": { "$ref": "#/$defs/payment_method" },
+        "include_vat": { "type": "boolean" },
+        "vat_rate": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.2 },
+        "status": { "$ref": "#/$defs/payment_status" },
+        "metadata": { "type": "object" }
+      }
+    },
+
+    "invoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "agent_id", "customer_name", "customer_email", "line_items", "due_date"],
+      "properties": {
+        "contract_type": { "const": "invoice" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "agent_id": { "type": "string", "minLength": 1 },
+        "customer_name": { "type": "string", "minLength": 1 },
+        "customer_email": { "type": "string", "format": "email" },
+        "line_items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["description", "quantity", "unit_price_gbp"],
+            "properties": {
+              "description": { "type": "string", "minLength": 1 },
+              "quantity": { "type": "number", "exclusiveMinimum": 0 },
+              "unit_price_gbp": { "type": "number", "minimum": 0 },
+              "vat_rate": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.2 }
+            }
+          }
+        },
+        "due_date": { "type": "string", "format": "date" },
+        "reference": { "type": "string" },
+        "status": { "$ref": "#/$defs/invoice_status" },
+        "subtotal_gbp": { "type": "number" },
+        "vat_gbp": { "type": "number" },
+        "total_gbp": { "type": "number" }
+      }
+    },
+
+    "heartbeat_report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "timestamp", "metrics"],
+      "properties": {
+        "contract_type": { "const": "heartbeat_report" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "agent_id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "jobs_pending": { "type": "integer", "minimum": 0 },
+            "jobs_claimed": { "type": "integer", "minimum": 0 },
+            "jobs_completed": { "type": "integer", "minimum": 0 },
+            "jobs_failed": { "type": "integer", "minimum": 0 },
+            "cycle_duration_ms": { "type": "number", "minimum": 0 },
+            "urgent_notifications": { "type": "integer", "minimum": 0 },
+            "active_capsules": { "type": "integer", "minimum": 0 },
+            "memory_entries": { "type": "integer", "minimum": 0 },
+            "skills_count": { "type": "integer", "minimum": 0 },
+            "success_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "avg_task_duration_ms": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

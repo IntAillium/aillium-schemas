@@ -23,6 +23,15 @@ This repository is the source of truth for boundary contracts split by architect
 - JSON Schema: `schemas/deprecated/worker-poll.schema.json`
 - Replacement: OpenClaw runtime contracts.
 
+## Autonomous Agent (Aillium 2.0)
+- JSON Schema: `schemas/core/autonomous-agent.schema.json`
+- Scope: self-skill-creation, learning loop (trajectory/evaluation/gradient),
+  governance policies, tool library, UK/GBP payments, heartbeat reporting.
+- Contracts: skill_candidate, skill_draft_request, skill_validation_result,
+  trajectory_record, learning_evaluation, governance_policy,
+  action_evaluation_request/result, tool_definition, tool_execution_request/result,
+  payment_intent, invoice, heartbeat_report.
+
 ## Canonical naming policy
 All new and active contracts use snake_case naming, including:
 - `task_id`

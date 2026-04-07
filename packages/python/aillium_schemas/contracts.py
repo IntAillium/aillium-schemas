@@ -230,3 +230,333 @@ OpenMeterEvent = Annotated[
     Union[TokenUsageEvent, WorkflowExecutionEvent, ActiveDeviceEvent],
     Field(discriminator="event_type"),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Aillium 2.0 Autonomous Agent Contracts
+# ---------------------------------------------------------------------------
+
+
+class ToolCategory(str, Enum):
+    BROWSER_AUTOMATION = "BROWSER_AUTOMATION"
+    GUI_AUTOMATION = "GUI_AUTOMATION"
+    SEARCH = "SEARCH"
+    COMMUNICATION = "COMMUNICATION"
+    FILE_OPERATION = "FILE_OPERATION"
+    DATA_PROCESSING = "DATA_PROCESSING"
+    PAYMENT = "PAYMENT"
+    CALENDAR = "CALENDAR"
+    CODE_EXECUTION = "CODE_EXECUTION"
+    KNOWLEDGE = "KNOWLEDGE"
+    CUSTOM = "CUSTOM"
+
+
+class ApprovalLevel(str, Enum):
+    NONE = "NONE"
+    DEPARTMENT_MANAGER = "DEPARTMENT_MANAGER"
+    OWNER = "OWNER"
+    MULTI_PARTY = "MULTI_PARTY"
+
+
+class PaymentMethod(str, Enum):
+    STRIPE_CARD = "STRIPE_CARD"
+    OPEN_BANKING = "OPEN_BANKING"
+    DIRECT_DEBIT = "DIRECT_DEBIT"
+    BANK_TRANSFER = "BANK_TRANSFER"
+
+
+class PaymentStatus(str, Enum):
+    PENDING = "PENDING"
+    AWAITING_APPROVAL = "AWAITING_APPROVAL"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    REFUNDED = "REFUNDED"
+
+
+class InvoiceStatus(str, Enum):
+    DRAFT = "DRAFT"
+    SENT = "SENT"
+    PAID = "PAID"
+    OVERDUE = "OVERDUE"
+    CANCELLED = "CANCELLED"
+    VOID = "VOID"
+
+
+class SkillPatternType(str, Enum):
+    RECURRING_WORKFLOW = "RECURRING_WORKFLOW"
+    FAILED_TASK_RECOVERY = "FAILED_TASK_RECOVERY"
+    MANUAL_WORKAROUND = "MANUAL_WORKAROUND"
+    MULTI_STEP_OPTIMIZATION = "MULTI_STEP_OPTIMIZATION"
+
+
+# Self-Skill-Creation contracts
+
+
+class SkillCandidate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["skill_candidate"]
+    tenant_id: str
+    department_id: str | None = None
+    suggested_name: str
+    suggested_description: str
+    suggested_category: str | None = None
+    source_task_ids: list[str]
+    pattern_type: SkillPatternType | None = None
+    confidence: float = Field(ge=0, le=1)
+    estimated_time_saved_minutes: float | None = None
+    task_count: int | None = None
+
+
+class SkillValidationResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["skill_validation_result"]
+    draft_id: str
+    valid: bool
+    tests_run: int
+    tests_passed: int
+    issues: list[dict[str, Any]] | None = None
+
+
+# Trajectory & Learning Loop contracts
+
+
+class TrajectoryAction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    tool_name: str
+    parameters: dict[str, Any] | None = None
+    result: dict[str, Any] | None = None
+    duration_ms: float | None = None
+    timestamp: datetime | None = None
+
+
+class TrajectoryMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    duration_ms: float
+    token_count: int | None = None
+    cost_units: float | None = None
+    success: bool
+    retry_count: int | None = None
+    cost_gbp: float | None = None
+
+
+class TrajectoryRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["trajectory_record"]
+    tenant_id: str
+    task_id: str
+    agent_id: str | None = None
+    department_id: str | None = None
+    skill_id: str | None = None
+    inputs: dict[str, Any]
+    actions: list[TrajectoryAction]
+    outputs: dict[str, Any]
+    metrics: TrajectoryMetrics
+
+
+class GradientUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    target_type: Literal["PROMPT", "TOOL_SELECTION", "APPROVAL_RULE"]
+    target_id: str
+    current_value: str
+    suggested_value: str
+    reason: str
+    confidence: float = Field(ge=0, le=1)
+
+
+class LearningEvaluationMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    total_trajectories: int
+    success_rate: float = Field(ge=0, le=1)
+    avg_duration_ms: float
+    avg_cost_gbp: float | None = None
+    retry_rate: float = Field(ge=0, le=1)
+
+
+class LearningEvaluation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["learning_evaluation"]
+    tenant_id: str
+    evaluation_id: str
+    department_id: str | None = None
+    period_start: datetime
+    period_end: datetime
+    metrics: LearningEvaluationMetrics
+    underperforming_skills: list[dict[str, Any]] | None = None
+    gradient_updates: list[GradientUpdate] | None = None
+
+
+# Governance contracts
+
+
+class GovernancePolicy(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["governance_policy"]
+    id: str | None = None
+    tenant_id: str | None = None
+    department_id: str | None = None
+    name: str
+    description: str | None = None
+    action_pattern: str
+    max_amount_gbp: float | None = None
+    risk_threshold: RiskLevel
+    requires_approval: bool
+    approval_level: ApprovalLevel
+    blocked_domains: list[str] | None = None
+    allowed_tools: list[str] | None = None
+    enabled: bool
+
+
+class ActionEvaluationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["action_evaluation_request"]
+    tenant_id: str
+    agent_id: str
+    department_id: str | None = None
+    action_type: str
+    action_payload: dict[str, Any] | None = None
+    risk_level: RiskLevel
+    estimated_cost_gbp: float | None = None
+
+
+class ActionEvaluationResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["action_evaluation_result"]
+    permitted: bool
+    requires_approval: bool
+    approval_level: ApprovalLevel
+    reason: str
+    matched_policies: list[str] | None = None
+    conditions: list[str] | None = None
+
+
+# Tool Library contracts
+
+
+class ToolDefinition(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["tool_definition"]
+    name: str
+    description: str
+    category: ToolCategory
+    risk_level: RiskLevel
+    input_schema: dict[str, Any]
+    output_schema: dict[str, Any] | None = None
+    requires_approval: bool
+    requires_capsule: bool
+    enabled: bool
+
+
+class ToolExecutionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["tool_execution_request"]
+    tenant_id: str
+    agent_id: str
+    tool_name: str
+    parameters: dict[str, Any]
+    capsule_id: str | None = None
+    trace_id: str
+
+
+class ToolExecutionResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["tool_execution_result"]
+    success: bool
+    output: Any | None = None
+    artifacts: list[dict[str, str]] | None = None
+    duration_ms: float
+    token_cost: int | None = None
+    error: str | None = None
+
+
+# UK/GBP Payment contracts
+
+
+class InvoiceLineItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    description: str
+    quantity: float
+    unit_price_gbp: float
+    vat_rate: float = 0.2
+
+
+class PaymentIntent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["payment_intent"]
+    tenant_id: str
+    agent_id: str
+    department_id: str | None = None
+    recipient_name: str
+    recipient_email: str | None = None
+    amount_gbp: float
+    currency: Literal["GBP"]
+    description: str
+    reference: str | None = None
+    payment_method: PaymentMethod
+    include_vat: bool
+    vat_rate: float = 0.2
+    status: PaymentStatus | None = None
+    metadata: dict[str, Any] | None = None
+
+
+class Invoice(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["invoice"]
+    tenant_id: str
+    agent_id: str
+    customer_name: str
+    customer_email: str
+    line_items: list[InvoiceLineItem]
+    due_date: str
+    reference: str | None = None
+    status: InvoiceStatus | None = None
+    subtotal_gbp: float | None = None
+    vat_gbp: float | None = None
+    total_gbp: float | None = None
+
+
+# Heartbeat contracts
+
+
+class HeartbeatMetrics(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    jobs_pending: int | None = None
+    jobs_claimed: int | None = None
+    jobs_completed: int | None = None
+    jobs_failed: int | None = None
+    cycle_duration_ms: float | None = None
+    urgent_notifications: int | None = None
+    active_capsules: int | None = None
+    memory_entries: int | None = None
+    skills_count: int | None = None
+    success_rate: float | None = None
+    avg_task_duration_ms: float | None = None
+
+
+class HeartbeatReport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["heartbeat_report"]
+    tenant_id: str
+    agent_id: str | None = None
+    timestamp: datetime
+    metrics: HeartbeatMetrics
