@@ -164,7 +164,7 @@ class SessionCompactionCheckpoint(BaseModel):
     tokens_before: int | None = Field(default=None, ge=0)
     tokens_after: int | None = Field(default=None, ge=0)
     summary: str | None = None
-    first_kept_entry_id: str | None = None
+    first_kept_entry_id: str | None = Field(default=None, min_length=1)
 
 
 class ExecHost(str, Enum):

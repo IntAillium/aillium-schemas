@@ -125,7 +125,7 @@ export const SessionCompactionCheckpointSchema = z.object({
   tokens_before: z.number().int().min(0).optional(),
   tokens_after: z.number().int().min(0).optional(),
   summary: z.string().optional(),
-  first_kept_entry_id: z.string().optional(),
+  first_kept_entry_id: z.string().min(1).optional(),
 });
 export type SessionCompactionCheckpoint = z.infer<typeof SessionCompactionCheckpointSchema>;
 
@@ -161,8 +161,8 @@ export type PluginApprovalDecision = (typeof PluginApprovalDecisionValues)[numbe
 export const PluginApprovalDecisionSchema = z.enum(PluginApprovalDecisionValues);
 
 export const ToolsEffectiveEntrySchema = z.object({
-  id: z.string(),
-  label: z.string(),
+  id: z.string().min(1),
+  label: z.string().min(1),
   description: z.string().optional(),
   source: z.enum(["core", "plugin", "channel"]),
   plugin_id: z.string().optional(),
@@ -171,9 +171,9 @@ export const ToolsEffectiveEntrySchema = z.object({
 export type ToolsEffectiveEntry = z.infer<typeof ToolsEffectiveEntrySchema>;
 
 export const ToolsEffectiveGroupSchema = z.object({
-  id: z.string(),
-  label: z.string(),
-  source: z.string(),
+  id: z.string().min(1),
+  label: z.string().min(1),
+  source: z.string().min(1),
   tools: z.array(ToolsEffectiveEntrySchema),
 });
 export type ToolsEffectiveGroup = z.infer<typeof ToolsEffectiveGroupSchema>;
