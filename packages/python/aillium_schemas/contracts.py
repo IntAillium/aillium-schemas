@@ -393,11 +393,19 @@ class SkillCandidate(BaseModel):
     suggested_name: str = Field(min_length=1)
     suggested_description: str = Field(min_length=1)
     suggested_category: str | None = None
-    source_task_ids: list[str]
+    source_task_ids: list[str] = Field(min_length=1)
     pattern_type: SkillPatternType | None = None
     confidence: float = Field(ge=0, le=1)
-    estimated_time_saved_minutes: float | None = None
-    task_count: int | None = None
+    estimated_time_saved_minutes: float | None = Field(default=None, ge=0)
+    task_count: int | None = Field(default=None, ge=1)
+
+
+class SkillDraftApprovalRules(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    require_approval: bool | None = None
+    approval_level: ApprovalLevel | None = None
+    max_auto_approve_gbp: float | None = None
 
 
 class SkillDraftRequest(BaseModel):
@@ -408,10 +416,10 @@ class SkillDraftRequest(BaseModel):
     candidate: SkillCandidate
     base_prompt: str | None = None
     allowed_tools: list[str] | None = None
-    approval_rules: dict[str, Any] | None = None
+    approval_rules: SkillDraftApprovalRules | None = None
     risk_level: RiskLevel | None = None
     requested_by: str | None = None
-    priority: float | None = None
+    priority: float | None = Field(default=None, ge=0, le=1)
 
 
 class SkillValidationIssue(BaseModel):
@@ -427,8 +435,8 @@ class SkillValidationResult(BaseModel):
     contract_type: Literal["skill_validation_result"]
     draft_id: str = Field(min_length=1)
     valid: bool
-    tests_run: int
-    tests_passed: int
+    tests_run: int = Field(ge=0)
+    tests_passed: int = Field(ge=0)
     issues: list["SkillValidationIssue"] | None = None
 
 
@@ -492,6 +500,15 @@ class LearningEvaluationMetrics(BaseModel):
     retry_rate: float = Field(ge=0, le=1)
 
 
+class UnderperformingSkill(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    skill_id: str
+    success_rate: float
+    gradient_notes: str
+    suggested_changes: str
+
+
 class LearningEvaluation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -502,7 +519,7 @@ class LearningEvaluation(BaseModel):
     period_start: datetime
     period_end: datetime
     metrics: LearningEvaluationMetrics
-    underperforming_skills: list[dict[str, Any]] | None = None
+    underperforming_skills: list[UnderperformingSkill] | None = None
     gradient_updates: list[GradientUpdate] | None = None
 
 
@@ -583,13 +600,20 @@ class ToolExecutionRequest(BaseModel):
     trace_id: str = Field(min_length=1)
 
 
+class ToolArtifact(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    uri: str
+    content_type: str
+
+
 class ToolExecutionResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_type: Literal["tool_execution_result"]
     success: bool
     output: Any | None = None
-    artifacts: list[dict[str, str]] | None = None
+    artifacts: list[ToolArtifact] | None = None
     duration_ms: float = Field(ge=0)
     token_cost: int | None = Field(default=None, ge=0)
     error: str | None = None
@@ -634,9 +658,9 @@ class Invoice(BaseModel):
     tenant_id: str = Field(min_length=1)
     agent_id: str = Field(min_length=1)
     customer_name: str = Field(min_length=1)
-    customer_email: str
-    line_items: list[InvoiceLineItem]
-    due_date: str
+    customer_email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    line_items: list[InvoiceLineItem] = Field(min_length=1)
+    due_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
     reference: str | None = None
     status: InvoiceStatus | None = None
     subtotal_gbp: float | None = None
@@ -650,17 +674,17 @@ class Invoice(BaseModel):
 class HeartbeatMetrics(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    jobs_pending: int | None = None
-    jobs_claimed: int | None = None
-    jobs_completed: int | None = None
-    jobs_failed: int | None = None
-    cycle_duration_ms: float | None = None
-    urgent_notifications: int | None = None
-    active_capsules: int | None = None
-    memory_entries: int | None = None
-    skills_count: int | None = None
-    success_rate: float | None = None
-    avg_task_duration_ms: float | None = None
+    jobs_pending: int | None = Field(default=None, ge=0)
+    jobs_claimed: int | None = Field(default=None, ge=0)
+    jobs_completed: int | None = Field(default=None, ge=0)
+    jobs_failed: int | None = Field(default=None, ge=0)
+    cycle_duration_ms: float | None = Field(default=None, ge=0)
+    urgent_notifications: int | None = Field(default=None, ge=0)
+    active_capsules: int | None = Field(default=None, ge=0)
+    memory_entries: int | None = Field(default=None, ge=0)
+    skills_count: int | None = Field(default=None, ge=0)
+    success_rate: float | None = Field(default=None, ge=0, le=1)
+    avg_task_duration_ms: float | None = Field(default=None, ge=0)
 
 
 class HeartbeatReport(BaseModel):
