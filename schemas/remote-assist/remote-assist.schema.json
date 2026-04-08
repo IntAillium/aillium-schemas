@@ -1,0 +1,311 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.cloud/remote-assist/remote-assist.schema.json",
+  "title": "Remote Assist Cloud Contracts",
+  "description": "Schema definitions for AilliumOS Remote Assist Cloud entities",
+  "$defs": {
+    "endpoint_lifecycle_state": {
+      "type": "string",
+      "enum": ["pending_enrollment", "enrolled", "active", "maintenance", "suspended", "quarantined", "retired", "archived", "deleted"]
+    },
+    "endpoint_health_status": {
+      "type": "string",
+      "enum": ["healthy", "degraded", "critical", "unknown"]
+    },
+    "assistance_request_category": {
+      "type": "string",
+      "enum": ["device_is_slow", "cannot_sign_in", "vpn_or_network_issue", "app_not_working", "email_or_calendar_issue", "printer_or_peripheral_issue", "software_install_or_update", "security_concern", "something_else"]
+    },
+    "assistance_request_priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "urgent"]
+    },
+    "assistance_request_status": {
+      "type": "string",
+      "enum": ["submitted", "triaged", "awaiting_approval", "scheduled", "in_progress", "resolved", "escalated", "rejected"]
+    },
+    "support_mode": {
+      "type": "string",
+      "enum": ["diagnostics_only", "live_help", "allow_unattended_fix", "approval_required_before_any_action"]
+    },
+    "session_type": {
+      "type": "string",
+      "enum": ["remote_desktop", "terminal", "diagnostics", "ai_assisted"]
+    },
+    "session_status": {
+      "type": "string",
+      "enum": ["pending", "active", "paused", "ended", "failed"]
+    },
+    "session_approval_state": {
+      "type": "string",
+      "enum": ["not_required", "pending", "approved", "denied"]
+    },
+    "action_risk_level": {
+      "type": "string",
+      "enum": ["read_only", "low_risk_write", "high_risk_write", "restricted"]
+    },
+    "evidence_type": {
+      "type": "string",
+      "enum": ["screenshot", "log_capture", "command_output", "screen_recording_metadata", "config_snapshot"]
+    },
+    "report_result_status": {
+      "type": "string",
+      "enum": ["resolved", "partially_resolved", "unresolved", "escalated"]
+    },
+    "audit_result": {
+      "type": "string",
+      "enum": ["success", "failure", "denied", "error"]
+    },
+    "policy_type": {
+      "type": "string",
+      "enum": ["unattended_access", "command_allowlist", "command_blocklist", "file_transfer_rules", "ai_assist_permissions", "ui_automation_rules", "approval_requirements", "session_retention", "evidence_retention", "redaction_rules"]
+    },
+    "policy_status": {
+      "type": "string",
+      "enum": ["active", "draft", "disabled", "archived"]
+    },
+    "Endpoint": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.endpoint" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "workspace_id": { "type": ["string", "null"], "format": "uuid" },
+        "hostname": { "type": "string" },
+        "serial_number": { "type": ["string", "null"] },
+        "manufacturer": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] },
+        "os_name": { "type": ["string", "null"] },
+        "os_version": { "type": ["string", "null"] },
+        "agent_version": { "type": ["string", "null"] },
+        "assigned_user_id": { "type": ["string", "null"], "format": "uuid" },
+        "lifecycle_state": { "$ref": "#/$defs/endpoint_lifecycle_state" },
+        "health_status": { "$ref": "#/$defs/endpoint_health_status" },
+        "last_seen_at": { "type": ["string", "null"], "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "site": { "type": ["string", "null"] },
+        "mesh_device_id": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "hostname", "lifecycle_state", "health_status", "created_at", "updated_at"]
+    },
+    "EndpointLifecycleEvent": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.endpoint_lifecycle_event" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "endpoint_id": { "type": "string", "format": "uuid" },
+        "from_state": { "$ref": "#/$defs/endpoint_lifecycle_state" },
+        "to_state": { "$ref": "#/$defs/endpoint_lifecycle_state" },
+        "changed_by": { "type": "string" },
+        "reason": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "endpoint_id", "from_state", "to_state", "changed_by", "created_at"]
+    },
+    "EndpointHealthSnapshot": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.endpoint_health_snapshot" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "endpoint_id": { "type": "string", "format": "uuid" },
+        "cpu_usage": { "type": ["number", "null"] },
+        "memory_usage": { "type": ["number", "null"] },
+        "disk_usage": { "type": ["number", "null"] },
+        "network_status": { "type": ["string", "null"] },
+        "agent_status": { "type": ["string", "null"] },
+        "captured_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "endpoint_id", "captured_at"]
+    },
+    "AssistanceRequest": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.assistance_request" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "workspace_id": { "type": ["string", "null"], "format": "uuid" },
+        "requester_user_id": { "type": "string", "format": "uuid" },
+        "endpoint_id": { "type": ["string", "null"], "format": "uuid" },
+        "category": { "$ref": "#/$defs/assistance_request_category" },
+        "priority": { "$ref": "#/$defs/assistance_request_priority" },
+        "description": { "type": "string" },
+        "support_mode": { "$ref": "#/$defs/support_mode" },
+        "consent_mode": { "type": ["string", "null"] },
+        "status": { "$ref": "#/$defs/assistance_request_status" },
+        "assigned_technician_id": { "type": ["string", "null"], "format": "uuid" },
+        "submitted_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "resolved_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "requester_user_id", "category", "priority", "description", "support_mode", "status", "submitted_at", "updated_at"]
+    },
+    "RequestAttachment": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.request_attachment" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "request_id": { "type": "string", "format": "uuid" },
+        "file_name": { "type": "string" },
+        "file_type": { "type": "string" },
+        "storage_uri": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "request_id", "file_name", "file_type", "storage_uri", "created_at"]
+    },
+    "RequestConsent": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.request_consent" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "request_id": { "type": "string", "format": "uuid" },
+        "consent_type": { "type": "string" },
+        "granted": { "type": "boolean" },
+        "granted_by": { "type": "string" },
+        "granted_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "request_id", "consent_type", "granted", "granted_by", "granted_at"]
+    },
+    "SupportSession": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.support_session" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "endpoint_id": { "type": "string", "format": "uuid" },
+        "request_id": { "type": ["string", "null"], "format": "uuid" },
+        "session_type": { "$ref": "#/$defs/session_type" },
+        "technician_id": { "type": "string", "format": "uuid" },
+        "status": { "$ref": "#/$defs/session_status" },
+        "approval_state": { "$ref": "#/$defs/session_approval_state" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "ended_at": { "type": ["string", "null"], "format": "date-time" },
+        "duration_seconds": { "type": ["integer", "null"] }
+      },
+      "required": ["contract_type", "id", "tenant_id", "endpoint_id", "session_type", "technician_id", "status", "approval_state", "started_at"]
+    },
+    "SessionAction": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.session_action" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "session_id": { "type": "string", "format": "uuid" },
+        "action_type": { "type": "string" },
+        "tool_used": { "type": ["string", "null"] },
+        "actor_id": { "type": "string" },
+        "command_or_action_summary": { "type": ["string", "null"] },
+        "risk_level": { "$ref": "#/$defs/action_risk_level" },
+        "approval_reference": { "type": ["string", "null"] },
+        "result": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "session_id", "action_type", "actor_id", "risk_level", "created_at"]
+    },
+    "SessionEvidence": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.session_evidence" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "session_id": { "type": "string", "format": "uuid" },
+        "evidence_type": { "$ref": "#/$defs/evidence_type" },
+        "storage_uri": { "type": "string" },
+        "hash": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "session_id", "evidence_type", "storage_uri", "created_at"]
+    },
+    "SessionReport": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.session_report" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "session_id": { "type": "string", "format": "uuid" },
+        "request_id": { "type": ["string", "null"], "format": "uuid" },
+        "summary": { "type": "string" },
+        "actions_taken": {},
+        "validation_result": { "type": ["string", "null"] },
+        "result_status": { "$ref": "#/$defs/report_result_status" },
+        "technician_notes": { "type": ["string", "null"] },
+        "ai_summary": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "session_id", "summary", "result_status", "created_at"]
+    },
+    "RemoteAssistAuditEvent": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.audit_event" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "actor_id": { "type": "string" },
+        "actor_role": { "type": "string" },
+        "target_type": { "type": "string" },
+        "target_id": { "type": ["string", "null"] },
+        "event_type": { "type": "string" },
+        "event_summary": { "type": "string" },
+        "result": { "$ref": "#/$defs/audit_result" },
+        "risk_level": { "type": ["string", "null"] },
+        "ip_address": { "type": ["string", "null"] },
+        "metadata_json": {},
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "actor_id", "actor_role", "target_type", "event_type", "event_summary", "result", "created_at"]
+    },
+    "RemoteAssistPolicy": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.policy" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string" },
+        "policy_type": { "$ref": "#/$defs/policy_type" },
+        "policy_json": {},
+        "status": { "$ref": "#/$defs/policy_status" },
+        "created_by": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "name", "policy_type", "policy_json", "status", "created_by", "created_at", "updated_at"]
+    },
+    "TenantEntitlement": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.tenant_entitlement" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "feature_key": { "type": "string" },
+        "enabled": { "type": "boolean" },
+        "limit_value": { "type": ["integer", "null"] },
+        "current_usage": { "type": "integer", "default": 0 },
+        "billing_source": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "feature_key", "enabled", "created_at", "updated_at"]
+    },
+    "BillingUsageRecord": {
+      "type": "object",
+      "properties": {
+        "contract_type": { "const": "remote_assist.billing_usage_record" },
+        "id": { "type": "string", "format": "uuid" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "feature_key": { "type": "string" },
+        "usage_unit": { "type": "string" },
+        "usage_value": { "type": "number" },
+        "period_start": { "type": "string", "format": "date-time" },
+        "period_end": { "type": "string", "format": "date-time" },
+        "source_reference": { "type": ["string", "null"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contract_type", "id", "tenant_id", "feature_key", "usage_unit", "usage_value", "period_start", "period_end", "created_at"]
+    }
+  }
+}
