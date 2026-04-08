@@ -759,3 +759,109 @@ class ApprovalDecision(BaseModel):
     approver_id: str = Field(min_length=1)
     decision: ApprovalDecisionValue
     comment: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Lark (Larksuite) Connection Contracts
+# ---------------------------------------------------------------------------
+
+
+class LarkDomain(str, Enum):
+    LARK = "lark"
+    FEISHU = "feishu"
+    CUSTOM = "custom"
+
+
+class LarkConnectionMode(str, Enum):
+    WEBSOCKET = "websocket"
+    WEBHOOK = "webhook"
+
+
+class LarkConnectionConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["lark_connection_config"]
+    tenant_id: str = Field(min_length=1)
+    app_id: str = Field(min_length=1)
+    app_secret: str = Field(min_length=1)
+    domain: LarkDomain | None = LarkDomain.LARK
+    custom_domain: str | None = None
+    connection_mode: LarkConnectionMode | None = LarkConnectionMode.WEBSOCKET
+    encrypt_key: str | None = None
+    verification_token: str | None = None
+    webhook_path: str | None = "/lark/events"
+    enabled: bool | None = True
+
+
+class LarkMsgType(str, Enum):
+    TEXT = "text"
+    POST = "post"
+    IMAGE = "image"
+    INTERACTIVE = "interactive"
+    SHARE_CHAT = "share_chat"
+    SHARE_USER = "share_user"
+    AUDIO = "audio"
+    MEDIA = "media"
+    FILE = "file"
+    STICKER = "sticker"
+
+
+class LarkReceiveIdType(str, Enum):
+    OPEN_ID = "open_id"
+    USER_ID = "user_id"
+    UNION_ID = "union_id"
+    EMAIL = "email"
+    CHAT_ID = "chat_id"
+
+
+class LarkWebhookEventSender(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    sender_id: str | None = None
+    sender_type: str | None = None
+    tenant_key: str | None = None
+
+
+class LarkWebhookEventMention(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str | None = None
+    id: str | None = None
+    name: str | None = None
+
+
+class LarkWebhookEventMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message_id: str | None = None
+    chat_id: str | None = None
+    chat_type: Literal["p2p", "group"] | None = None
+    content: str | None = None
+    msg_type: str | None = None
+    mentions: list[LarkWebhookEventMention] | None = None
+
+
+class LarkWebhookEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["lark_webhook_event"]
+    tenant_id: str = Field(min_length=1)
+    trace_id: str | None = None
+    event_type: str = Field(min_length=1)
+    event_id: str | None = None
+    timestamp: datetime
+    app_id: str | None = None
+    sender: LarkWebhookEventSender | None = None
+    message: LarkWebhookEventMessage | None = None
+
+
+class LarkSendMessageRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["lark_send_message_request"]
+    tenant_id: str = Field(min_length=1)
+    trace_id: str | None = None
+    receive_id: str = Field(min_length=1)
+    receive_id_type: LarkReceiveIdType | None = LarkReceiveIdType.CHAT_ID
+    msg_type: LarkMsgType
+    content: str = Field(min_length=1)

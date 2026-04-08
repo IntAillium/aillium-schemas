@@ -707,3 +707,100 @@ export const ApprovalDecisionSchema = z.object({
   comment: z.string().nullable(),
 });
 export type ApprovalDecision = z.infer<typeof ApprovalDecisionSchema>;
+
+// ---------------------------------------------------------------------------
+// Lark (Larksuite) Connection Contracts
+// ---------------------------------------------------------------------------
+
+export const LarkDomainValues = ["lark", "feishu", "custom"] as const;
+export type LarkDomain = (typeof LarkDomainValues)[number];
+export const LarkDomainSchema = z.enum(LarkDomainValues);
+
+export const LarkConnectionModeValues = ["websocket", "webhook"] as const;
+export type LarkConnectionMode = (typeof LarkConnectionModeValues)[number];
+export const LarkConnectionModeSchema = z.enum(LarkConnectionModeValues);
+
+export const LarkConnectionConfigSchema = z.object({
+  contract_type: z.literal("lark_connection_config"),
+  tenant_id: z.string().min(1),
+  app_id: z.string().min(1),
+  app_secret: z.string().min(1),
+  domain: LarkDomainSchema.optional().default("lark"),
+  custom_domain: z.string().url().optional(),
+  connection_mode: LarkConnectionModeSchema.optional().default("websocket"),
+  encrypt_key: z.string().optional(),
+  verification_token: z.string().optional(),
+  webhook_path: z.string().optional().default("/lark/events"),
+  enabled: z.boolean().optional().default(true),
+});
+export type LarkConnectionConfig = z.infer<typeof LarkConnectionConfigSchema>;
+
+export const LarkMsgTypeValues = [
+  "text",
+  "post",
+  "image",
+  "interactive",
+  "share_chat",
+  "share_user",
+  "audio",
+  "media",
+  "file",
+  "sticker",
+] as const;
+export type LarkMsgType = (typeof LarkMsgTypeValues)[number];
+export const LarkMsgTypeSchema = z.enum(LarkMsgTypeValues);
+
+export const LarkReceiveIdTypeValues = [
+  "open_id",
+  "user_id",
+  "union_id",
+  "email",
+  "chat_id",
+] as const;
+export type LarkReceiveIdType = (typeof LarkReceiveIdTypeValues)[number];
+export const LarkReceiveIdTypeSchema = z.enum(LarkReceiveIdTypeValues);
+
+export const LarkWebhookEventSenderSchema = z.object({
+  sender_id: z.string().optional(),
+  sender_type: z.string().optional(),
+  tenant_key: z.string().optional(),
+});
+
+export const LarkWebhookEventMentionSchema = z.object({
+  key: z.string().optional(),
+  id: z.string().optional(),
+  name: z.string().optional(),
+});
+
+export const LarkWebhookEventMessageSchema = z.object({
+  message_id: z.string().optional(),
+  chat_id: z.string().optional(),
+  chat_type: z.enum(["p2p", "group"]).optional(),
+  content: z.string().optional(),
+  msg_type: z.string().optional(),
+  mentions: z.array(LarkWebhookEventMentionSchema).optional(),
+});
+
+export const LarkWebhookEventSchema = z.object({
+  contract_type: z.literal("lark_webhook_event"),
+  tenant_id: z.string().min(1),
+  trace_id: z.string().optional(),
+  event_type: z.string().min(1),
+  event_id: z.string().optional(),
+  timestamp: z.string().datetime(),
+  app_id: z.string().optional(),
+  sender: LarkWebhookEventSenderSchema.optional(),
+  message: LarkWebhookEventMessageSchema.optional(),
+});
+export type LarkWebhookEvent = z.infer<typeof LarkWebhookEventSchema>;
+
+export const LarkSendMessageRequestSchema = z.object({
+  contract_type: z.literal("lark_send_message_request"),
+  tenant_id: z.string().min(1),
+  trace_id: z.string().optional(),
+  receive_id: z.string().min(1),
+  receive_id_type: LarkReceiveIdTypeSchema.optional().default("chat_id"),
+  msg_type: LarkMsgTypeSchema,
+  content: z.string().min(1),
+});
+export type LarkSendMessageRequest = z.infer<typeof LarkSendMessageRequestSchema>;

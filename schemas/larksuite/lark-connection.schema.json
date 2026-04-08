@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/larksuite/lark-connection.schema.json",
+  "title": "Lark (Larksuite) Connection Contracts",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/lark_connection_config" },
+    { "$ref": "#/$defs/lark_webhook_event" },
+    { "$ref": "#/$defs/lark_send_message_request" }
+  ],
+  "$defs": {
+    "lark_connection_config": {
+      "type": "object",
+      "title": "LarkConnectionConfig",
+      "description": "Configuration for connecting Aillium to a Lark (Larksuite) tenant.",
+      "properties": {
+        "contract_type": { "const": "lark_connection_config" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "app_id": { "type": "string", "minLength": 1, "description": "Lark app ID from the Developer Console." },
+        "app_secret": { "type": "string", "minLength": 1, "description": "Lark app secret from the Developer Console." },
+        "domain": {
+          "type": "string",
+          "enum": ["lark", "feishu", "custom"],
+          "default": "lark",
+          "description": "API domain: 'lark' for international, 'feishu' for China, 'custom' for private deployment."
+        },
+        "custom_domain": {
+          "type": "string",
+          "format": "uri",
+          "description": "Custom API base URL, required when domain is 'custom'."
+        },
+        "connection_mode": {
+          "type": "string",
+          "enum": ["websocket", "webhook"],
+          "default": "websocket",
+          "description": "How Aillium receives events from Lark."
+        },
+        "encrypt_key": { "type": "string", "description": "Encrypt key for webhook event verification." },
+        "verification_token": { "type": "string", "description": "Verification token for webhook callback validation." },
+        "webhook_path": { "type": "string", "default": "/lark/events", "description": "URL path for incoming Lark webhook events." },
+        "enabled": { "type": "boolean", "default": true }
+      },
+      "required": ["contract_type", "tenant_id", "app_id", "app_secret"],
+      "additionalProperties": false
+    },
+    "lark_webhook_event": {
+      "type": "object",
+      "title": "LarkWebhookEvent",
+      "description": "Inbound event received from Lark via webhook or websocket.",
+      "properties": {
+        "contract_type": { "const": "lark_webhook_event" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string" },
+        "event_type": { "type": "string", "minLength": 1, "description": "Lark event type, e.g. 'im.message.receive_v1'." },
+        "event_id": { "type": "string", "description": "Unique event ID from Lark for deduplication." },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "app_id": { "type": "string" },
+        "sender": {
+          "type": "object",
+          "properties": {
+            "sender_id": { "type": "string" },
+            "sender_type": { "type": "string" },
+            "tenant_key": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "message": {
+          "type": "object",
+          "properties": {
+            "message_id": { "type": "string" },
+            "chat_id": { "type": "string" },
+            "chat_type": { "type": "string", "enum": ["p2p", "group"] },
+            "content": { "type": "string" },
+            "msg_type": { "type": "string" },
+            "mentions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": { "type": "string" },
+                  "id": { "type": "string" },
+                  "name": { "type": "string" }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["contract_type", "tenant_id", "event_type", "timestamp"],
+      "additionalProperties": false
+    },
+    "lark_send_message_request": {
+      "type": "object",
+      "title": "LarkSendMessageRequest",
+      "description": "Request to send a message to a Lark chat via Aillium.",
+      "properties": {
+        "contract_type": { "const": "lark_send_message_request" },
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "trace_id": { "type": "string" },
+        "receive_id": { "type": "string", "minLength": 1, "description": "Target chat/user ID." },
+        "receive_id_type": {
+          "type": "string",
+          "enum": ["open_id", "user_id", "union_id", "email", "chat_id"],
+          "default": "chat_id"
+        },
+        "msg_type": {
+          "type": "string",
+          "enum": ["text", "post", "image", "interactive", "share_chat", "share_user", "audio", "media", "file", "sticker"],
+          "description": "Message content type."
+        },
+        "content": { "type": "string", "minLength": 1, "description": "JSON-encoded message content." }
+      },
+      "required": ["contract_type", "tenant_id", "receive_id", "msg_type", "content"],
+      "additionalProperties": false
+    }
+  }
+}
