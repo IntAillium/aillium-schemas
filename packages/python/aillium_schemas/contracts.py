@@ -133,6 +133,87 @@ class RuntimeResult(BaseModel):
     error: RuntimeError | None = None
 
 
+# OpenClaw session management contracts (protocol v3 extensions)
+
+
+class SessionCompactionReason(str, Enum):
+    MANUAL = "manual"
+    AUTO_THRESHOLD = "auto-threshold"
+    OVERFLOW_RETRY = "overflow-retry"
+    TIMEOUT_RETRY = "timeout-retry"
+
+
+class SessionCompactionCheckpoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["openclaw.session.compaction_checkpoint"]
+    checkpoint_id: str
+    session_key: str
+    session_id: str
+    created_at: datetime
+    reason: SessionCompactionReason
+    tokens_before: int
+    tokens_after: int
+    summary: str | None = None
+
+
+class ExecHost(str, Enum):
+    SANDBOX = "sandbox"
+    GATEWAY = "gateway"
+    NODE = "node"
+    AUTO = "auto"
+
+
+class RuntimeSessionPatch(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["openclaw.session.patch"]
+    key: str
+    model: str | None = None
+    auth_profile_id: str | None = None
+    auth_profile_source: Literal["auto", "user"] | None = None
+    exec_host: ExecHost | None = None
+
+
+class PluginApprovalRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["openclaw.plugin_approval.request"]
+    plugin_id: str
+    title: str
+    description: str
+    severity: str | None = None
+    tool_name: str | None = None
+    agent_id: str | None = None
+    session_key: str | None = None
+    timeout_ms: float | None = None
+
+
+class PluginApprovalDecision(str, Enum):
+    APPROVED = "approved"
+    DENIED = "denied"
+
+
+class ToolsEffectiveEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    label: str
+    description: str | None = None
+    source: Literal["core", "plugin", "channel"]
+    plugin_id: str | None = None
+    channel_id: str | None = None
+
+
+class ToolsEffectiveGroup(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    label: str
+    source: str
+    tools: list[ToolsEffectiveEntry]
+
+
 # MeshCentral remote-support boundary contracts
 class MeshSessionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")

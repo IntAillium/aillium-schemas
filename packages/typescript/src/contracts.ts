@@ -100,6 +100,78 @@ export const RuntimeResultSchema = z.object({
 });
 export type RuntimeResult = z.infer<typeof RuntimeResultSchema>;
 
+// OpenClaw session management contracts (protocol v3 extensions)
+export const SessionCompactionReasonValues = [
+  "manual",
+  "auto-threshold",
+  "overflow-retry",
+  "timeout-retry",
+] as const;
+export type SessionCompactionReason = (typeof SessionCompactionReasonValues)[number];
+export const SessionCompactionReasonSchema = z.enum(SessionCompactionReasonValues);
+
+export const SessionCompactionCheckpointSchema = z.object({
+  contract_type: z.literal("openclaw.session.compaction_checkpoint"),
+  checkpoint_id: z.string(),
+  session_key: z.string(),
+  session_id: z.string(),
+  created_at: z.string().datetime(),
+  reason: SessionCompactionReasonSchema,
+  tokens_before: z.number().int(),
+  tokens_after: z.number().int(),
+  summary: z.string().optional(),
+});
+export type SessionCompactionCheckpoint = z.infer<typeof SessionCompactionCheckpointSchema>;
+
+export const ExecHostValues = ["sandbox", "gateway", "node", "auto"] as const;
+export type ExecHost = (typeof ExecHostValues)[number];
+export const ExecHostSchema = z.enum(ExecHostValues);
+
+export const RuntimeSessionPatchSchema = z.object({
+  contract_type: z.literal("openclaw.session.patch"),
+  key: z.string(),
+  model: z.string().optional(),
+  auth_profile_id: z.string().optional(),
+  auth_profile_source: z.enum(["auto", "user"]).optional(),
+  exec_host: ExecHostSchema.optional(),
+});
+export type RuntimeSessionPatch = z.infer<typeof RuntimeSessionPatchSchema>;
+
+export const PluginApprovalRequestSchema = z.object({
+  contract_type: z.literal("openclaw.plugin_approval.request"),
+  plugin_id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  severity: z.string().optional(),
+  tool_name: z.string().optional(),
+  agent_id: z.string().optional(),
+  session_key: z.string().optional(),
+  timeout_ms: z.number().optional(),
+});
+export type PluginApprovalRequest = z.infer<typeof PluginApprovalRequestSchema>;
+
+export const PluginApprovalDecisionValues = ["approved", "denied"] as const;
+export type PluginApprovalDecision = (typeof PluginApprovalDecisionValues)[number];
+export const PluginApprovalDecisionSchema = z.enum(PluginApprovalDecisionValues);
+
+export const ToolsEffectiveEntrySchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  description: z.string().optional(),
+  source: z.enum(["core", "plugin", "channel"]),
+  plugin_id: z.string().optional(),
+  channel_id: z.string().optional(),
+});
+export type ToolsEffectiveEntry = z.infer<typeof ToolsEffectiveEntrySchema>;
+
+export const ToolsEffectiveGroupSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  source: z.string(),
+  tools: z.array(ToolsEffectiveEntrySchema),
+});
+export type ToolsEffectiveGroup = z.infer<typeof ToolsEffectiveGroupSchema>;
+
 // MeshCentral remote-support boundary contracts
 export const MeshSessionRequestSchema = z.object({
   tenant_id: z.string(),
