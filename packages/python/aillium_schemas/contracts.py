@@ -814,10 +814,18 @@ class LarkReceiveIdType(str, Enum):
     CHAT_ID = "chat_id"
 
 
+class LarkSenderId(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    open_id: str | None = None
+    user_id: str | None = None
+    union_id: str | None = None
+
+
 class LarkWebhookEventSender(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    sender_id: str | None = None
+    sender_id: LarkSenderId | None = None
     sender_type: str | None = None
     tenant_key: str | None = None
 
@@ -849,7 +857,7 @@ class LarkWebhookEvent(BaseModel):
     trace_id: str | None = None
     event_type: str = Field(min_length=1)
     event_id: str | None = None
-    timestamp: datetime
+    timestamp: str
     app_id: str | None = None
     sender: LarkWebhookEventSender | None = None
     message: LarkWebhookEventMessage | None = None

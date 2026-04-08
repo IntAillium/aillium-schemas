@@ -760,8 +760,14 @@ export const LarkReceiveIdTypeValues = [
 export type LarkReceiveIdType = (typeof LarkReceiveIdTypeValues)[number];
 export const LarkReceiveIdTypeSchema = z.enum(LarkReceiveIdTypeValues);
 
+export const LarkSenderIdSchema = z.object({
+  open_id: z.string().optional(),
+  user_id: z.string().optional(),
+  union_id: z.string().optional(),
+});
+
 export const LarkWebhookEventSenderSchema = z.object({
-  sender_id: z.string().optional(),
+  sender_id: LarkSenderIdSchema.optional(),
   sender_type: z.string().optional(),
   tenant_key: z.string().optional(),
 });
@@ -787,7 +793,7 @@ export const LarkWebhookEventSchema = z.object({
   trace_id: z.string().optional(),
   event_type: z.string().min(1),
   event_id: z.string().optional(),
-  timestamp: z.string().datetime(),
+  timestamp: z.string(),
   app_id: z.string().optional(),
   sender: LarkWebhookEventSenderSchema.optional(),
   message: LarkWebhookEventMessageSchema.optional(),

@@ -53,12 +53,20 @@
         "trace_id": { "type": "string" },
         "event_type": { "type": "string", "minLength": 1, "description": "Lark event type, e.g. 'im.message.receive_v1'." },
         "event_id": { "type": "string", "description": "Unique event ID from Lark for deduplication." },
-        "timestamp": { "type": "string", "format": "date-time" },
+        "timestamp": { "type": "string", "description": "Event timestamp, ISO 8601 or Unix epoch string." },
         "app_id": { "type": "string" },
         "sender": {
           "type": "object",
           "properties": {
-            "sender_id": { "type": "string" },
+            "sender_id": {
+              "type": "object",
+              "properties": {
+                "open_id": { "type": "string" },
+                "user_id": { "type": "string" },
+                "union_id": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
             "sender_type": { "type": "string" },
             "tenant_key": { "type": "string" }
           },
