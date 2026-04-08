@@ -64,10 +64,10 @@ export type RuntimeStatus = z.infer<typeof RuntimeStatusSchema>;
 export const RuntimeDispatchSchema = z.object({
   contract_type: z.literal("openclaw.runtime.dispatch"),
   schema_version: z.literal("1.0.0"),
-  task_id: z.string(),
-  worker_id: z.string(),
-  tenant_id: z.string(),
-  trace_id: z.string(),
+  task_id: z.string().min(1),
+  worker_id: z.string().min(1),
+  tenant_id: z.string().min(1),
+  trace_id: z.string().min(1),
   created_at: z.string().datetime(),
   deadline_at: z.string().datetime().optional(),
   input: z.object({
@@ -81,14 +81,19 @@ export type RuntimeDispatch = z.infer<typeof RuntimeDispatchSchema>;
 export const RuntimeResultSchema = z.object({
   contract_type: z.literal("openclaw.runtime.result"),
   schema_version: z.literal("1.0.0"),
-  task_id: z.string(),
-  worker_id: z.string(),
-  tenant_id: z.string(),
-  trace_id: z.string(),
+  task_id: z.string().min(1),
+  worker_id: z.string().min(1),
+  tenant_id: z.string().min(1),
+  trace_id: z.string().min(1),
   completed_at: z.string().datetime(),
   status: RuntimeStatusSchema,
   result: z.object({
     output: z.record(z.unknown()),
+    artifacts: z.array(z.object({
+      uri: z.string(),
+      content_type: z.string().optional(),
+      sha256: z.string().optional(),
+    })).optional(),
   }),
   error: z
     .object({

@@ -112,10 +112,19 @@ class RuntimeError(BaseModel):
     retryable: bool | None = None
 
 
+class RuntimeResultArtifact(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    uri: str
+    content_type: str | None = None
+    sha256: str | None = None
+
+
 class RuntimeResultBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     output: dict[str, Any]
+    artifacts: list[RuntimeResultArtifact] | None = None
 
 
 class RuntimeResult(BaseModel):

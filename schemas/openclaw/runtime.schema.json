@@ -8,8 +8,7 @@
     { "$ref": "#/$defs/runtime_result" },
     { "$ref": "#/$defs/session_compaction_checkpoint" },
     { "$ref": "#/$defs/runtime_session_patch" },
-    { "$ref": "#/$defs/plugin_approval_request" },
-    { "$ref": "#/$defs/tools_effective_group" }
+    { "$ref": "#/$defs/plugin_approval_request" }
   ],
   "$defs": {
     "runtime_dispatch": {
