@@ -207,8 +207,8 @@ class PluginApprovalDecision(str, Enum):
 class ToolsEffectiveEntry(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str
-    label: str
+    id: str = Field(min_length=1)
+    label: str = Field(min_length=1)
     description: str | None = None
     source: Literal["core", "plugin", "channel"]
     plugin_id: str | None = None
@@ -218,9 +218,9 @@ class ToolsEffectiveEntry(BaseModel):
 class ToolsEffectiveGroup(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str
-    label: str
-    source: str
+    id: str = Field(min_length=1)
+    label: str = Field(min_length=1)
+    source: str = Field(min_length=1)
     tools: list[ToolsEffectiveEntry]
 
 
