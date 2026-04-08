@@ -79,20 +79,19 @@
         "session_key",
         "session_id",
         "created_at",
-        "reason",
-        "tokens_before",
-        "tokens_after"
+        "reason"
       ],
       "properties": {
         "contract_type": { "const": "openclaw.session.compaction_checkpoint" },
         "checkpoint_id": { "type": "string", "minLength": 1 },
         "session_key": { "type": "string", "minLength": 1 },
         "session_id": { "type": "string", "minLength": 1 },
-        "created_at": { "type": "string", "format": "date-time" },
+        "created_at": { "type": "integer", "minimum": 0 },
         "reason": { "$ref": "#/$defs/session_compaction_reason" },
-        "tokens_before": { "type": "integer" },
-        "tokens_after": { "type": "integer" },
-        "summary": { "type": "string" }
+        "tokens_before": { "type": "integer", "minimum": 0 },
+        "tokens_after": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "string" },
+        "first_kept_entry_id": { "type": "string", "minLength": 1 }
       }
     },
     "runtime_session_patch": {
@@ -135,6 +134,19 @@
         "tools": {
           "type": "array",
           "items": { "$ref": "#/$defs/tools_effective_entry" }
+        }
+      }
+    },
+    "tools_effective_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["groups"],
+      "properties": {
+        "agent_id": { "type": "string" },
+        "profile": { "type": "string" },
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tools_effective_group" }
         }
       }
     },

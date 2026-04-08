@@ -159,11 +159,12 @@ class SessionCompactionCheckpoint(BaseModel):
     checkpoint_id: str
     session_key: str
     session_id: str
-    created_at: datetime
+    created_at: int = Field(ge=0)
     reason: SessionCompactionReason
-    tokens_before: int
-    tokens_after: int
+    tokens_before: int | None = Field(default=None, ge=0)
+    tokens_after: int | None = Field(default=None, ge=0)
     summary: str | None = None
+    first_kept_entry_id: str | None = None
 
 
 class ExecHost(str, Enum):
@@ -221,6 +222,14 @@ class ToolsEffectiveGroup(BaseModel):
     label: str
     source: str
     tools: list[ToolsEffectiveEntry]
+
+
+class ToolsEffectiveResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    agent_id: str | None = None
+    profile: str | None = None
+    groups: list[ToolsEffectiveGroup]
 
 
 # MeshCentral remote-support boundary contracts

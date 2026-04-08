@@ -120,11 +120,12 @@ export const SessionCompactionCheckpointSchema = z.object({
   checkpoint_id: z.string(),
   session_key: z.string(),
   session_id: z.string(),
-  created_at: z.string().datetime(),
+  created_at: z.number().int().min(0),
   reason: SessionCompactionReasonSchema,
-  tokens_before: z.number().int(),
-  tokens_after: z.number().int(),
+  tokens_before: z.number().int().min(0).optional(),
+  tokens_after: z.number().int().min(0).optional(),
   summary: z.string().optional(),
+  first_kept_entry_id: z.string().optional(),
 });
 export type SessionCompactionCheckpoint = z.infer<typeof SessionCompactionCheckpointSchema>;
 
@@ -176,6 +177,13 @@ export const ToolsEffectiveGroupSchema = z.object({
   tools: z.array(ToolsEffectiveEntrySchema),
 });
 export type ToolsEffectiveGroup = z.infer<typeof ToolsEffectiveGroupSchema>;
+
+export const ToolsEffectiveResultSchema = z.object({
+  agent_id: z.string().optional(),
+  profile: z.string().optional(),
+  groups: z.array(ToolsEffectiveGroupSchema),
+});
+export type ToolsEffectiveResult = z.infer<typeof ToolsEffectiveResultSchema>;
 
 // MeshCentral remote-support boundary contracts
 export const MeshSessionRequestSchema = z.object({
