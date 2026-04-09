@@ -5,7 +5,10 @@
   "type": "object",
   "oneOf": [
     { "$ref": "#/$defs/runtime_dispatch" },
-    { "$ref": "#/$defs/runtime_result" }
+    { "$ref": "#/$defs/runtime_result" },
+    { "$ref": "#/$defs/session_compaction_checkpoint" },
+    { "$ref": "#/$defs/runtime_session_patch" },
+    { "$ref": "#/$defs/plugin_approval_request" }
   ],
   "$defs": {
     "runtime_dispatch": {
@@ -39,6 +42,111 @@
             "payload": { "type": "object" },
             "context": { "type": "object", "additionalProperties": true }
           }
+        }
+      }
+    },
+    "session_compaction_reason": {
+      "type": "string",
+      "enum": ["manual", "auto-threshold", "overflow-retry", "timeout-retry"]
+    },
+    "exec_host": {
+      "type": "string",
+      "enum": ["sandbox", "gateway", "node", "auto"]
+    },
+    "plugin_approval_decision": {
+      "type": "string",
+      "enum": ["approved", "denied"]
+    },
+    "tools_effective_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "source"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "source": { "type": "string", "enum": ["core", "plugin", "channel"] },
+        "plugin_id": { "type": "string" },
+        "channel_id": { "type": "string" }
+      }
+    },
+    "session_compaction_checkpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_type",
+        "checkpoint_id",
+        "session_key",
+        "session_id",
+        "created_at",
+        "reason"
+      ],
+      "properties": {
+        "contract_type": { "const": "openclaw.session.compaction_checkpoint" },
+        "checkpoint_id": { "type": "string", "minLength": 1 },
+        "session_key": { "type": "string", "minLength": 1 },
+        "session_id": { "type": "string", "minLength": 1 },
+        "created_at": { "type": "integer", "minimum": 0 },
+        "reason": { "$ref": "#/$defs/session_compaction_reason" },
+        "tokens_before": { "type": "integer", "minimum": 0 },
+        "tokens_after": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "string" },
+        "first_kept_entry_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "runtime_session_patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "key"],
+      "properties": {
+        "contract_type": { "const": "openclaw.session.patch" },
+        "key": { "type": "string", "minLength": 1 },
+        "model": { "type": "string" },
+        "auth_profile_id": { "type": "string" },
+        "auth_profile_source": { "type": "string", "enum": ["auto", "user"] },
+        "exec_host": { "$ref": "#/$defs/exec_host" }
+      }
+    },
+    "plugin_approval_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "plugin_id", "title", "description"],
+      "properties": {
+        "contract_type": { "const": "openclaw.plugin_approval.request" },
+        "plugin_id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "severity": { "type": "string" },
+        "tool_name": { "type": "string" },
+        "agent_id": { "type": "string" },
+        "session_key": { "type": "string" },
+        "timeout_ms": { "type": "number" }
+      }
+    },
+    "tools_effective_group": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "source", "tools"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "source": { "type": "string" },
+        "tools": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tools_effective_entry" }
+        }
+      }
+    },
+    "tools_effective_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["groups"],
+      "properties": {
+        "agent_id": { "type": "string" },
+        "profile": { "type": "string" },
+        "groups": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/tools_effective_group" }
         }
       }
     },
