@@ -895,3 +895,146 @@ export const LarkSendMessageRequestSchema = z.object({
   content: z.string().min(1),
 });
 export type LarkSendMessageRequest = z.infer<typeof LarkSendMessageRequestSchema>;
+
+// ---------------------------------------------------------------------------
+// Staff Room Contracts
+// ---------------------------------------------------------------------------
+
+export const StaffRoomMemoryRetention = z.enum(['PERMANENT', 'SEMI_PERMANENT', 'TEMPORARY', 'ARCHIVED']);
+export type StaffRoomMemoryRetention = z.infer<typeof StaffRoomMemoryRetention>;
+
+export const StaffRoomRecordStatus = z.enum(['DRAFT', 'ACTIVE', 'UNDER_REVIEW', 'DEPRECATED', 'ARCHIVED']);
+export type StaffRoomRecordStatus = z.infer<typeof StaffRoomRecordStatus>;
+
+export const StaffRoomMemoryScope = z.enum(['GLOBAL', 'DEPARTMENTAL', 'ROLE_BASED', 'RESTRICTED', 'ADMIN_ONLY']);
+export type StaffRoomMemoryScope = z.infer<typeof StaffRoomMemoryScope>;
+
+export const StaffRoomAgentStatus = z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']);
+export type StaffRoomAgentStatus = z.infer<typeof StaffRoomAgentStatus>;
+
+export const StaffRoomRelationshipType = z.enum([
+  'DEPARTMENT_TO_PROCESS', 'PROCESS_TO_OWNER', 'TOOL_TO_DEPARTMENT', 'AGENT_TO_DEPARTMENT',
+  'INCIDENT_TO_RESOLUTION', 'ARTICLE_TO_PROCESS', 'PROCESS_TO_ESCALATION', 'KNOWLEDGE_TO_ROLE',
+  'AGENT_TO_KNOWLEDGE', 'PROCESS_TO_TOOL', 'DEPARTMENT_TO_TOOL', 'CUSTOM',
+]);
+export type StaffRoomRelationshipType = z.infer<typeof StaffRoomRelationshipType>;
+
+export const PentagramAxis = z.object({
+  key: z.string(),
+  label: z.string(),
+  value: z.number().min(0).max(100),
+});
+export type PentagramAxis = z.infer<typeof PentagramAxis>;
+
+export const StaffRoomPentagramConfig = z.object({
+  axes: z.array(PentagramAxis).min(3).max(8),
+});
+export type StaffRoomPentagramConfig = z.infer<typeof StaffRoomPentagramConfig>;
+
+export const StaffRoomKnowledgeArticleSchema = z.object({
+  contract_type: z.literal('staff_room.knowledge_article'),
+  tenant_id: z.string().uuid(),
+  article_id: z.string().uuid(),
+  title: z.string(),
+  category: z.string(),
+  tags: z.array(z.string()),
+  content: z.string(),
+  summary: z.string().optional(),
+  department_id: z.string().uuid().optional(),
+  retention: StaffRoomMemoryRetention,
+  status: StaffRoomRecordStatus,
+  memory_scope: StaffRoomMemoryScope,
+  priority: z.number().int().min(1).max(10),
+  confidence: z.number().int().min(0).max(100),
+  source: z.string().optional(),
+  version: z.number().int(),
+});
+export type StaffRoomKnowledgeArticle = z.infer<typeof StaffRoomKnowledgeArticleSchema>;
+
+export const StaffRoomProcessSchema = z.object({
+  contract_type: z.literal('staff_room.process'),
+  tenant_id: z.string().uuid(),
+  process_id: z.string().uuid(),
+  name: z.string(),
+  department_id: z.string().uuid().optional(),
+  description: z.string().optional(),
+  trigger: z.string().optional(),
+  steps: z.any().optional(),
+  owner: z.string().optional(),
+  escalation_path: z.any().optional(),
+  related_tools: z.array(z.string()),
+  retention: StaffRoomMemoryRetention,
+  status: StaffRoomRecordStatus,
+  memory_scope: StaffRoomMemoryScope,
+  version: z.number().int(),
+});
+export type StaffRoomProcess = z.infer<typeof StaffRoomProcessSchema>;
+
+export const StaffRoomOperationalNoteSchema = z.object({
+  contract_type: z.literal('staff_room.operational_note'),
+  tenant_id: z.string().uuid(),
+  note_id: z.string().uuid(),
+  title: z.string(),
+  note: z.string(),
+  department_id: z.string().uuid().optional(),
+  context_type: z.string().optional(),
+  linked_entity_type: z.string().optional(),
+  linked_entity_id: z.string().uuid().optional(),
+  priority: z.number().int().min(1).max(10),
+  status: StaffRoomRecordStatus,
+  memory_scope: StaffRoomMemoryScope,
+  retention: StaffRoomMemoryRetention,
+  confidence: z.number().int().min(0).max(100),
+  expires_at: z.string().datetime().optional(),
+});
+export type StaffRoomOperationalNote = z.infer<typeof StaffRoomOperationalNoteSchema>;
+
+export const StaffRoomAgentProfileSchema = z.object({
+  contract_type: z.literal('staff_room.agent_profile'),
+  tenant_id: z.string().uuid(),
+  profile_id: z.string().uuid(),
+  agent_id: z.string().uuid().optional(),
+  name: z.string(),
+  image_url: z.string().optional(),
+  description: z.string().optional(),
+  department_id: z.string().uuid().optional(),
+  role_title: z.string().optional(),
+  specialties: z.array(z.string()),
+  tags: z.array(z.string()),
+  pentagram_config: StaffRoomPentagramConfig.optional(),
+  skill_ratings: z.record(z.number()).optional(),
+  permissions: z.record(z.unknown()).optional(),
+  memory_scope: StaffRoomMemoryScope,
+  status: StaffRoomAgentStatus,
+});
+export type StaffRoomAgentProfile = z.infer<typeof StaffRoomAgentProfileSchema>;
+
+export const StaffRoomMemoryRetrievalRequestSchema = z.object({
+  contract_type: z.literal('staff_room.memory_retrieval_request'),
+  tenant_id: z.string().uuid(),
+  agent_id: z.string().uuid().optional(),
+  department_id: z.string().uuid().optional(),
+  query: z.string().optional(),
+  memory_scopes: z.array(StaffRoomMemoryScope).optional(),
+  include_types: z.array(z.enum(['knowledge', 'process', 'operational_note', 'agent_profile'])).optional(),
+  max_results: z.number().int().min(1).max(100).optional(),
+});
+export type StaffRoomMemoryRetrievalRequest = z.infer<typeof StaffRoomMemoryRetrievalRequestSchema>;
+
+export const StaffRoomMemoryRetrievalResultSchema = z.object({
+  contract_type: z.literal('staff_room.memory_retrieval_result'),
+  tenant_id: z.string().uuid(),
+  results: z.array(z.object({
+    entity_type: z.string(),
+    entity_id: z.string().uuid(),
+    title: z.string(),
+    summary: z.string().optional(),
+    content: z.string().optional(),
+    relevance_score: z.number().min(0).max(1).optional(),
+    memory_scope: StaffRoomMemoryScope,
+    retention: StaffRoomMemoryRetention,
+    department_id: z.string().uuid().optional(),
+  })),
+  total_count: z.number().int(),
+});
+export type StaffRoomMemoryRetrievalResult = z.infer<typeof StaffRoomMemoryRetrievalResultSchema>;
