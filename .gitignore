@@ -45,8 +45,8 @@ build/
 .env
 .env.*
 
-# Lock files (managed per-package, not at root)
-package-lock.json
+# Lock files: ignore stray root lockfile but track per-package lockfiles
+/package-lock.json
 
 # Logs
 *.log

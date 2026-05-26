@@ -92,7 +92,7 @@ export const RuntimeResultSchema = z.object({
     artifacts: z.array(z.object({
       uri: z.string(),
       content_type: z.string().optional(),
-      sha256: z.string().optional(),
+      sha256: z.string().regex(/^[a-fA-F0-9]{64}$/).optional(),
     })).optional(),
   }),
   error: z
@@ -235,10 +235,10 @@ export type DeprecatedWorkerPollResult = z.infer<typeof DeprecatedWorkerPollResu
 
 export const EvidencePointerSchema = z.object({
   storage_provider: z.enum(["s3", "r2"]),
-  bucket: z.string(),
-  object_key: z.string(),
-  mime_type: z.string(),
-  sha256: z.string(),
+  bucket: z.string().min(1),
+  object_key: z.string().min(1),
+  mime_type: z.string().min(1),
+  sha256: z.string().regex(/^[a-fA-F0-9]{64}$/),
 });
 export type EvidencePointer = z.infer<typeof EvidencePointerSchema>;
 
