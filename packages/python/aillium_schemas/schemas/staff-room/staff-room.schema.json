@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aillium.dev/staff-room/staff-room.schema.json",
+  "title": "Aillium Staff Room Contracts",
+  "description": "Schema definitions for Aillium Staff Room: knowledge articles, processes, operational notes, agent profiles, and memory retrieval.",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/staff_room_knowledge_article" },
+    { "$ref": "#/$defs/staff_room_process" },
+    { "$ref": "#/$defs/staff_room_operational_note" },
+    { "$ref": "#/$defs/staff_room_agent_profile" },
+    { "$ref": "#/$defs/staff_room_memory_retrieval_request" },
+    { "$ref": "#/$defs/staff_room_memory_retrieval_result" }
+  ],
+  "$defs": {
+    "staff_room_memory_retention": {
+      "type": "string",
+      "enum": ["PERMANENT", "SEMI_PERMANENT", "TEMPORARY", "ARCHIVED"]
+    },
+    "staff_room_record_status": {
+      "type": "string",
+      "enum": ["DRAFT", "ACTIVE", "UNDER_REVIEW", "DEPRECATED", "ARCHIVED"]
+    },
+    "staff_room_memory_scope": {
+      "type": "string",
+      "enum": ["GLOBAL", "DEPARTMENTAL", "ROLE_BASED", "RESTRICTED", "ADMIN_ONLY"]
+    },
+    "staff_room_agent_status": {
+      "type": "string",
+      "enum": ["ACTIVE", "INACTIVE", "SUSPENDED", "ARCHIVED"]
+    },
+    "staff_room_relationship_type": {
+      "type": "string",
+      "enum": [
+        "DEPARTMENT_TO_PROCESS",
+        "PROCESS_TO_OWNER",
+        "TOOL_TO_DEPARTMENT",
+        "AGENT_TO_DEPARTMENT",
+        "INCIDENT_TO_RESOLUTION",
+        "ARTICLE_TO_PROCESS",
+        "PROCESS_TO_ESCALATION",
+        "KNOWLEDGE_TO_ROLE",
+        "AGENT_TO_KNOWLEDGE",
+        "PROCESS_TO_TOOL",
+        "DEPARTMENT_TO_TOOL",
+        "CUSTOM"
+      ]
+    },
+
+    "pentagram_axis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "label", "value"],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "value": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+
+    "staff_room_pentagram_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["axes"],
+      "properties": {
+        "axes": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/pentagram_axis" }
+        }
+      }
+    },
+
+    "staff_room_knowledge_article": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_type",
+        "tenant_id",
+        "article_id",
+        "title",
+        "category",
+        "tags",
+        "content",
+        "retention",
+        "status",
+        "memory_scope",
+        "priority",
+        "confidence",
+        "version"
+      ],
+      "properties": {
+        "contract_type": { "const": "staff_room.knowledge_article" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "article_id": { "type": "string", "format": "uuid" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "content": { "type": "string" },
+        "summary": { "type": "string" },
+        "department_id": { "type": "string", "format": "uuid" },
+        "retention": { "$ref": "#/$defs/staff_room_memory_retention" },
+        "status": { "$ref": "#/$defs/staff_room_record_status" },
+        "memory_scope": { "$ref": "#/$defs/staff_room_memory_scope" },
+        "priority": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "source": { "type": "string" },
+        "version": { "type": "integer" }
+      }
+    },
+
+    "staff_room_process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_type",
+        "tenant_id",
+        "process_id",
+        "name",
+        "related_tools",
+        "retention",
+        "status",
+        "memory_scope",
+        "version"
+      ],
+      "properties": {
+        "contract_type": { "const": "staff_room.process" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "process_id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string" },
+        "department_id": { "type": "string", "format": "uuid" },
+        "description": { "type": "string" },
+        "trigger": { "type": "string" },
+        "steps": {},
+        "owner": { "type": "string" },
+        "escalation_path": {},
+        "related_tools": { "type": "array", "items": { "type": "string" } },
+        "retention": { "$ref": "#/$defs/staff_room_memory_retention" },
+        "status": { "$ref": "#/$defs/staff_room_record_status" },
+        "memory_scope": { "$ref": "#/$defs/staff_room_memory_scope" },
+        "version": { "type": "integer" }
+      }
+    },
+
+    "staff_room_operational_note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_type",
+        "tenant_id",
+        "note_id",
+        "title",
+        "note",
+        "priority",
+        "status",
+        "memory_scope",
+        "retention",
+        "confidence"
+      ],
+      "properties": {
+        "contract_type": { "const": "staff_room.operational_note" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "note_id": { "type": "string", "format": "uuid" },
+        "title": { "type": "string" },
+        "note": { "type": "string" },
+        "department_id": { "type": "string", "format": "uuid" },
+        "context_type": { "type": "string" },
+        "linked_entity_type": { "type": "string" },
+        "linked_entity_id": { "type": "string", "format": "uuid" },
+        "priority": { "type": "integer", "minimum": 1, "maximum": 10 },
+        "status": { "$ref": "#/$defs/staff_room_record_status" },
+        "memory_scope": { "$ref": "#/$defs/staff_room_memory_scope" },
+        "retention": { "$ref": "#/$defs/staff_room_memory_retention" },
+        "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "expires_at": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "staff_room_agent_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_type",
+        "tenant_id",
+        "profile_id",
+        "name",
+        "specialties",
+        "tags",
+        "memory_scope",
+        "status"
+      ],
+      "properties": {
+        "contract_type": { "const": "staff_room.agent_profile" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "profile_id": { "type": "string", "format": "uuid" },
+        "agent_id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string" },
+        "image_url": { "type": "string" },
+        "description": { "type": "string" },
+        "department_id": { "type": "string", "format": "uuid" },
+        "role_title": { "type": "string" },
+        "specialties": { "type": "array", "items": { "type": "string" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "pentagram_config": { "$ref": "#/$defs/staff_room_pentagram_config" },
+        "skill_ratings": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "memory_scope": { "$ref": "#/$defs/staff_room_memory_scope" },
+        "status": { "$ref": "#/$defs/staff_room_agent_status" }
+      }
+    },
+
+    "staff_room_memory_retrieval_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id"],
+      "properties": {
+        "contract_type": { "const": "staff_room.memory_retrieval_request" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "agent_id": { "type": "string", "format": "uuid" },
+        "department_id": { "type": "string", "format": "uuid" },
+        "query": { "type": "string" },
+        "memory_scopes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/staff_room_memory_scope" }
+        },
+        "include_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["knowledge", "process", "operational_note", "agent_profile"]
+          }
+        },
+        "max_results": { "type": "integer", "minimum": 1, "maximum": 100 }
+      }
+    },
+
+    "staff_room_memory_retrieval_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_type", "tenant_id", "results", "total_count"],
+      "properties": {
+        "contract_type": { "const": "staff_room.memory_retrieval_result" },
+        "tenant_id": { "type": "string", "format": "uuid" },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["entity_type", "entity_id", "title", "memory_scope", "retention"],
+            "properties": {
+              "entity_type": { "type": "string" },
+              "entity_id": { "type": "string", "format": "uuid" },
+              "title": { "type": "string" },
+              "summary": { "type": "string" },
+              "content": { "type": "string" },
+              "relevance_score": { "type": "number", "minimum": 0, "maximum": 1 },
+              "memory_scope": { "$ref": "#/$defs/staff_room_memory_scope" },
+              "retention": { "$ref": "#/$defs/staff_room_memory_retention" },
+              "department_id": { "type": "string", "format": "uuid" }
+            }
+          }
+        },
+        "total_count": { "type": "integer" }
+      }
+    }
+  }
+}

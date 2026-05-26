@@ -996,3 +996,192 @@ class LarkSendMessageRequest(BaseModel):
     receive_id_type: LarkReceiveIdType | None = LarkReceiveIdType.CHAT_ID
     msg_type: LarkMsgType
     content: str = Field(min_length=1)
+
+
+# ---------------------------------------------------------------------------
+# Staff Room Contracts
+# ---------------------------------------------------------------------------
+
+
+class StaffRoomMemoryRetention(str, Enum):
+    PERMANENT = "PERMANENT"
+    SEMI_PERMANENT = "SEMI_PERMANENT"
+    TEMPORARY = "TEMPORARY"
+    ARCHIVED = "ARCHIVED"
+
+
+class StaffRoomRecordStatus(str, Enum):
+    DRAFT = "DRAFT"
+    ACTIVE = "ACTIVE"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    DEPRECATED = "DEPRECATED"
+    ARCHIVED = "ARCHIVED"
+
+
+class StaffRoomMemoryScope(str, Enum):
+    GLOBAL = "GLOBAL"
+    DEPARTMENTAL = "DEPARTMENTAL"
+    ROLE_BASED = "ROLE_BASED"
+    RESTRICTED = "RESTRICTED"
+    ADMIN_ONLY = "ADMIN_ONLY"
+
+
+class StaffRoomAgentStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
+    ARCHIVED = "ARCHIVED"
+
+
+class StaffRoomRelationshipType(str, Enum):
+    DEPARTMENT_TO_PROCESS = "DEPARTMENT_TO_PROCESS"
+    PROCESS_TO_OWNER = "PROCESS_TO_OWNER"
+    TOOL_TO_DEPARTMENT = "TOOL_TO_DEPARTMENT"
+    AGENT_TO_DEPARTMENT = "AGENT_TO_DEPARTMENT"
+    INCIDENT_TO_RESOLUTION = "INCIDENT_TO_RESOLUTION"
+    ARTICLE_TO_PROCESS = "ARTICLE_TO_PROCESS"
+    PROCESS_TO_ESCALATION = "PROCESS_TO_ESCALATION"
+    KNOWLEDGE_TO_ROLE = "KNOWLEDGE_TO_ROLE"
+    AGENT_TO_KNOWLEDGE = "AGENT_TO_KNOWLEDGE"
+    PROCESS_TO_TOOL = "PROCESS_TO_TOOL"
+    DEPARTMENT_TO_TOOL = "DEPARTMENT_TO_TOOL"
+    CUSTOM = "CUSTOM"
+
+
+class PentagramAxis(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str
+    label: str
+    value: float = Field(ge=0, le=100)
+
+
+class StaffRoomPentagramConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    axes: list[PentagramAxis] = Field(min_length=3, max_length=8)
+
+
+class StaffRoomKnowledgeArticle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["staff_room.knowledge_article"]
+    tenant_id: str = Field(min_length=1)
+    article_id: str = Field(min_length=1)
+    title: str
+    category: str
+    tags: list[str]
+    content: str
+    summary: str | None = None
+    department_id: str | None = None
+    retention: StaffRoomMemoryRetention
+    status: StaffRoomRecordStatus
+    memory_scope: StaffRoomMemoryScope
+    priority: int = Field(ge=1, le=10)
+    confidence: int = Field(ge=0, le=100)
+    source: str | None = None
+    version: int
+
+
+class StaffRoomProcess(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["staff_room.process"]
+    tenant_id: str = Field(min_length=1)
+    process_id: str = Field(min_length=1)
+    name: str
+    department_id: str | None = None
+    description: str | None = None
+    trigger: str | None = None
+    steps: Any | None = None
+    owner: str | None = None
+    escalation_path: Any | None = None
+    related_tools: list[str]
+    retention: StaffRoomMemoryRetention
+    status: StaffRoomRecordStatus
+    memory_scope: StaffRoomMemoryScope
+    version: int
+
+
+class StaffRoomOperationalNote(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["staff_room.operational_note"]
+    tenant_id: str = Field(min_length=1)
+    note_id: str = Field(min_length=1)
+    title: str
+    note: str
+    department_id: str | None = None
+    context_type: str | None = None
+    linked_entity_type: str | None = None
+    linked_entity_id: str | None = None
+    priority: int = Field(ge=1, le=10)
+    status: StaffRoomRecordStatus
+    memory_scope: StaffRoomMemoryScope
+    retention: StaffRoomMemoryRetention
+    confidence: int = Field(ge=0, le=100)
+    expires_at: str | None = None
+
+
+class StaffRoomAgentProfile(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["staff_room.agent_profile"]
+    tenant_id: str = Field(min_length=1)
+    profile_id: str = Field(min_length=1)
+    agent_id: str | None = None
+    name: str
+    image_url: str | None = None
+    description: str | None = None
+    department_id: str | None = None
+    role_title: str | None = None
+    specialties: list[str]
+    tags: list[str]
+    pentagram_config: StaffRoomPentagramConfig | None = None
+    skill_ratings: dict[str, float] | None = None
+    permissions: dict[str, Any] | None = None
+    memory_scope: StaffRoomMemoryScope
+    status: StaffRoomAgentStatus
+
+
+class StaffRoomMemoryRetrievalIncludeType(str, Enum):
+    KNOWLEDGE = "knowledge"
+    PROCESS = "process"
+    OPERATIONAL_NOTE = "operational_note"
+    AGENT_PROFILE = "agent_profile"
+
+
+class StaffRoomMemoryRetrievalRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["staff_room.memory_retrieval_request"]
+    tenant_id: str = Field(min_length=1)
+    agent_id: str | None = None
+    department_id: str | None = None
+    query: str | None = None
+    memory_scopes: list[StaffRoomMemoryScope] | None = None
+    include_types: list[StaffRoomMemoryRetrievalIncludeType] | None = None
+    max_results: int | None = Field(default=None, ge=1, le=100)
+
+
+class StaffRoomMemoryRetrievalResultItem(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    entity_type: str
+    entity_id: str = Field(min_length=1)
+    title: str
+    summary: str | None = None
+    content: str | None = None
+    relevance_score: float | None = Field(default=None, ge=0, le=1)
+    memory_scope: StaffRoomMemoryScope
+    retention: StaffRoomMemoryRetention
+    department_id: str | None = None
+
+
+class StaffRoomMemoryRetrievalResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_type: Literal["staff_room.memory_retrieval_result"]
+    tenant_id: str = Field(min_length=1)
+    results: list[StaffRoomMemoryRetrievalResultItem]
+    total_count: int
