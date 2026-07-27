@@ -17,10 +17,10 @@ jobs:
           node-version: "20"
       - name: Install TS deps
         working-directory: packages/typescript
-        run: npm install
+        run: npm ci --workspaces=false
       - name: Build TS package
         working-directory: packages/typescript
-        run: npm run build
+        run: npm run build --workspaces=false
       - name: Run TS parity tests
         run: node --test tests/contract_parity.test.mjs tests/autonomous_agent_parity.test.mjs
 
@@ -48,15 +48,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Install ajv-cli
-        run: npm install -g ajv-cli ajv-formats
       - name: Validate canonical schemas parse as JSON Schema 2020-12
-        run: |
-          set -e
-          for schema in $(find schemas -name "*.schema.json"); do
-            echo "Validating $schema"
-            ajv compile -s "$schema" --spec=draft2020 --strict=false -c ajv-formats || exit 1
-          done
+        run: >-
+          npm exec --yes
+          --package=ajv-cli@5.0.0
+          --package=ajv-formats@3.0.1
+          --
+          ajv compile
+          -s "schemas/**/*.schema.json"
+          --spec=draft2020
+          --strict=false
+          -c ajv-formats
       - name: Validate Python embedded schemas match canonical
         run: |
           set -e
