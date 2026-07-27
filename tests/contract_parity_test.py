@@ -21,6 +21,7 @@ TASK_WORKFLOW = ROOT / "schemas" / "core" / "task-workflow.schema.json"
 RUNTIME = ROOT / "schemas" / "openclaw" / "runtime.schema.json"
 REMOTE_SUPPORT = ROOT / "schemas" / "meshcentral" / "remote-support.schema.json"
 EXECUTOR_RESPONSE = ROOT / "schemas" / "executor" / "executor.response.schema.json"
+STAFF_ROOM = ROOT / "schemas" / "staff-room" / "staff-room.schema.json"
 
 # ── Python embedded copy (bundled in wheel) ───────────────────────────
 PY_TASK_WORKFLOW = (
@@ -31,6 +32,15 @@ PY_TASK_WORKFLOW = (
     / "schemas"
     / "core"
     / "task-workflow.schema.json"
+)
+PY_STAFF_ROOM = (
+    ROOT
+    / "packages"
+    / "python"
+    / "aillium_schemas"
+    / "schemas"
+    / "staff-room"
+    / "staff-room.schema.json"
 )
 
 
@@ -172,6 +182,92 @@ class TestExecutorResponseSchema(unittest.TestCase):
         expected = ["generic", "agent", "tool", "job"]
         actual = self.schema["properties"]["executor_type"]["enum"]
         self.assertEqual(actual, expected)
+
+
+class TestStaffRoomSchema(unittest.TestCase):
+    """Verify staff-room schema enums, embedded copy, and Python parity."""
+
+    def setUp(self):
+        self.schema = _load(STAFF_ROOM)
+        self.defs = self.schema["$defs"]
+
+    def test_memory_retention_enum(self):
+        expected = ["PERMANENT", "SEMI_PERMANENT", "TEMPORARY", "ARCHIVED"]
+        actual = self.defs["staff_room_memory_retention"]["enum"]
+        self.assertEqual(actual, expected)
+
+    def test_record_status_enum(self):
+        expected = ["DRAFT", "ACTIVE", "UNDER_REVIEW", "DEPRECATED", "ARCHIVED"]
+        actual = self.defs["staff_room_record_status"]["enum"]
+        self.assertEqual(actual, expected)
+
+    def test_memory_scope_enum(self):
+        expected = ["GLOBAL", "DEPARTMENTAL", "ROLE_BASED", "RESTRICTED", "ADMIN_ONLY"]
+        actual = self.defs["staff_room_memory_scope"]["enum"]
+        self.assertEqual(actual, expected)
+
+    def test_agent_status_enum(self):
+        expected = ["ACTIVE", "INACTIVE", "SUSPENDED", "ARCHIVED"]
+        actual = self.defs["staff_room_agent_status"]["enum"]
+        self.assertEqual(actual, expected)
+
+    def test_relationship_type_enum(self):
+        expected = [
+            "DEPARTMENT_TO_PROCESS",
+            "PROCESS_TO_OWNER",
+            "TOOL_TO_DEPARTMENT",
+            "AGENT_TO_DEPARTMENT",
+            "INCIDENT_TO_RESOLUTION",
+            "ARTICLE_TO_PROCESS",
+            "PROCESS_TO_ESCALATION",
+            "KNOWLEDGE_TO_ROLE",
+            "AGENT_TO_KNOWLEDGE",
+            "PROCESS_TO_TOOL",
+            "DEPARTMENT_TO_TOOL",
+            "CUSTOM",
+        ]
+        actual = self.defs["staff_room_relationship_type"]["enum"]
+        self.assertEqual(actual, expected)
+
+    def test_embedded_copy_matches_canonical(self):
+        canonical = _load(STAFF_ROOM)
+        embedded = _load(PY_STAFF_ROOM)
+        self.assertEqual(embedded, canonical, "Embedded staff-room schema diverges from canonical")
+
+    def test_python_memory_retention_matches(self):
+        from aillium_schemas.contracts import StaffRoomMemoryRetention
+
+        canonical = self.defs["staff_room_memory_retention"]["enum"]
+        python_values = [e.value for e in StaffRoomMemoryRetention]
+        self.assertEqual(python_values, canonical)
+
+    def test_python_record_status_matches(self):
+        from aillium_schemas.contracts import StaffRoomRecordStatus
+
+        canonical = self.defs["staff_room_record_status"]["enum"]
+        python_values = [e.value for e in StaffRoomRecordStatus]
+        self.assertEqual(python_values, canonical)
+
+    def test_python_memory_scope_matches(self):
+        from aillium_schemas.contracts import StaffRoomMemoryScope
+
+        canonical = self.defs["staff_room_memory_scope"]["enum"]
+        python_values = [e.value for e in StaffRoomMemoryScope]
+        self.assertEqual(python_values, canonical)
+
+    def test_python_agent_status_matches(self):
+        from aillium_schemas.contracts import StaffRoomAgentStatus
+
+        canonical = self.defs["staff_room_agent_status"]["enum"]
+        python_values = [e.value for e in StaffRoomAgentStatus]
+        self.assertEqual(python_values, canonical)
+
+    def test_python_relationship_type_matches(self):
+        from aillium_schemas.contracts import StaffRoomRelationshipType
+
+        canonical = self.defs["staff_room_relationship_type"]["enum"]
+        python_values = [e.value for e in StaffRoomRelationshipType]
+        self.assertEqual(python_values, canonical)
 
 
 if __name__ == "__main__":

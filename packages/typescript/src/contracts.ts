@@ -32,26 +32,26 @@ export const BudgetCapsSchema = z.object({
 export type BudgetCaps = z.infer<typeof BudgetCapsSchema>;
 
 export const TaskCreateSchema = z.object({
-  tenant_id: z.string(),
-  device_id: z.string(),
+  tenant_id: z.string().min(1),
+  device_id: z.string().min(1),
   budget_caps: BudgetCapsSchema,
   allowed_tools: z.array(z.string()),
   risk_level: RiskLevelSchema,
-  trace_id: z.string().optional(),
+  trace_id: z.string().min(1).optional(),
 });
 export type TaskCreate = z.infer<typeof TaskCreateSchema>;
 
 export const TaskSchema = TaskCreateSchema.extend({
-  task_id: z.string(),
+  task_id: z.string().min(1),
   state: TaskStateSchema,
 });
 export type Task = z.infer<typeof TaskSchema>;
 
 export const StepUpdateSchema = z.object({
-  task_id: z.string(),
-  trace_id: z.string().optional(),
+  task_id: z.string().min(1),
+  trace_id: z.string().min(1).optional(),
   step_index: z.number().int().nonnegative(),
-  description: z.string(),
+  description: z.string().min(1),
   timestamp: z.string().datetime(),
   status: z.enum(["INFO", "WARNING", "ERROR"]),
 });
@@ -92,7 +92,7 @@ export const RuntimeResultSchema = z.object({
     artifacts: z.array(z.object({
       uri: z.string(),
       content_type: z.string().optional(),
-      sha256: z.string().optional(),
+      sha256: z.string().regex(/^[a-fA-F0-9]{64}$/).optional(),
     })).optional(),
   }),
   error: z
@@ -187,21 +187,21 @@ export type ToolsEffectiveResult = z.infer<typeof ToolsEffectiveResultSchema>;
 
 // MeshCentral remote-support boundary contracts
 export const MeshSessionRequestSchema = z.object({
-  tenant_id: z.string(),
-  task_id: z.string(),
-  trace_id: z.string(),
-  device_id: z.string(),
-  operator_id: z.string(),
+  tenant_id: z.string().min(1),
+  task_id: z.string().min(1),
+  trace_id: z.string().min(1),
+  device_id: z.string().min(1),
+  operator_id: z.string().min(1),
   requested_at: z.string().datetime().optional(),
 });
 export type MeshSessionRequest = z.infer<typeof MeshSessionRequestSchema>;
 
 export const MeshSessionStateSchema = z.object({
-  tenant_id: z.string(),
-  task_id: z.string(),
-  trace_id: z.string(),
-  device_id: z.string(),
-  session_id: z.string(),
+  tenant_id: z.string().min(1),
+  task_id: z.string().min(1),
+  trace_id: z.string().min(1),
+  device_id: z.string().min(1),
+  session_id: z.string().min(1),
   status: z.enum(["requested", "establishing", "active", "ended", "failed"]),
   ended_at: z.string().datetime().optional(),
 });
@@ -209,19 +209,19 @@ export type MeshSessionState = z.infer<typeof MeshSessionStateSchema>;
 
 /** @deprecated Use RuntimeDispatchSchema instead. */
 export const DeprecatedWorkerPollRequestSchema = z.object({
-  worker_id: z.string(),
-  tenant_id: z.string(),
-  trace_id: z.string(),
+  worker_id: z.string().min(1),
+  tenant_id: z.string().min(1),
+  trace_id: z.string().min(1),
   max_items: z.number().int().positive().optional(),
 });
 export type DeprecatedWorkerPollRequest = z.infer<typeof DeprecatedWorkerPollRequestSchema>;
 
 /** @deprecated Use RuntimeResultSchema instead. */
 export const DeprecatedWorkerPollResultSchema = z.object({
-  task_id: z.string(),
-  worker_id: z.string(),
-  tenant_id: z.string(),
-  trace_id: z.string(),
+  task_id: z.string().min(1),
+  worker_id: z.string().min(1),
+  tenant_id: z.string().min(1),
+  trace_id: z.string().min(1),
   status: RuntimeStatusSchema,
   output: z.record(z.unknown()).optional(),
   error: z
@@ -235,10 +235,10 @@ export type DeprecatedWorkerPollResult = z.infer<typeof DeprecatedWorkerPollResu
 
 export const EvidencePointerSchema = z.object({
   storage_provider: z.enum(["s3", "r2"]),
-  bucket: z.string(),
-  object_key: z.string(),
-  mime_type: z.string(),
-  sha256: z.string(),
+  bucket: z.string().min(1),
+  object_key: z.string().min(1),
+  mime_type: z.string().min(1),
+  sha256: z.string().regex(/^[a-fA-F0-9]{64}$/),
 });
 export type EvidencePointer = z.infer<typeof EvidencePointerSchema>;
 
@@ -247,8 +247,8 @@ export const TokenUsageEventSchema = z.object({
   tenant_id: z.string(),
   source: z.enum(["openclaw", "litellm"]),
   model: z.string(),
-  input_tokens: z.number(),
-  output_tokens: z.number(),
+  input_tokens: z.number().int().min(0),
+  output_tokens: z.number().int().min(0),
   timestamp: z.string().datetime(),
   idempotency_key: z.string(),
 });
@@ -258,7 +258,7 @@ export const WorkflowExecutionEventSchema = z.object({
   event_type: z.literal("workflow_execution"),
   tenant_id: z.string(),
   workflow_name: z.string(),
-  duration_ms: z.number(),
+  duration_ms: z.number().min(0),
   timestamp: z.string().datetime(),
   idempotency_key: z.string(),
 });

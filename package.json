@@ -25,6 +25,6 @@
     "AI_GUARDRAILS.md"
   ],
   "scripts": {
-    "prepare": "npm --prefix packages/typescript install && npm --prefix packages/typescript run build"
+    "prepare": "npm --prefix packages/typescript ci --workspaces=false && npm --prefix packages/typescript run build --workspaces=false"
   }
 }

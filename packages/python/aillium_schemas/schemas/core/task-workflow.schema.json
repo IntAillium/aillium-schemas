@@ -38,18 +38,19 @@
       }
     },
     "task": {
-      "allOf": [
-        { "$ref": "#/$defs/task_create" },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["task_id", "state"],
-          "properties": {
-            "task_id": { "type": "string", "minLength": 1 },
-            "state": { "$ref": "#/$defs/task_state" }
-          }
-        }
-      ]
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tenant_id", "device_id", "budget_caps", "allowed_tools", "risk_level", "task_id", "state"],
+      "properties": {
+        "tenant_id": { "type": "string", "minLength": 1 },
+        "device_id": { "type": "string", "minLength": 1 },
+        "budget_caps": { "$ref": "#/$defs/budget_caps" },
+        "allowed_tools": { "type": "array", "items": { "type": "string" } },
+        "risk_level": { "$ref": "#/$defs/risk_level" },
+        "trace_id": { "type": "string", "minLength": 1 },
+        "task_id": { "type": "string", "minLength": 1 },
+        "state": { "$ref": "#/$defs/task_state" }
+      }
     },
     "step_update": {
       "type": "object",
