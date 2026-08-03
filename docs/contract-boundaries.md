@@ -44,3 +44,23 @@ CamelCase aliases are intentionally removed from active schemas. Deprecated shap
 
 ## Language parity
 TypeScript (`packages/typescript/src/contracts.ts`) and Python (`packages/python/aillium_schemas/contracts.py`) mirror the same boundary split and canonical field names.
+# Canonical lifecycle v2
+
+The Core-owned `2.0` lifecycle is the only supported contract for new
+conversation-to-execution work:
+
+- `Conversation` maps to Core `RequestThread` during the migration window.
+- An `ANSWER` creates no `WorkOrder`.
+- An `ACT` creates exactly one `WorkOrder` and one initial `Run`, guarded by a
+  tenant-scoped idempotency key.
+- `Task`, `MasterAgentSession`, `CoordinatorRun`, `ExecutionCapsule`, and
+  `DaemonJob` are legacy execution records referenced through Core's single
+  compatibility boundary. They are not public lifecycle authorities.
+- User-visible progress is emitted as resumable `RunEvent` records. Raw model
+  chain-of-thought and system prompts are never part of this contract.
+- `PAUSE`, `RESUME`, `STEER`, `CANCEL`, and `TAKEOVER` are idempotent commands.
+  Requested states are distinct from executor-acknowledged states.
+
+The TypeScript Zod contracts live in `packages/typescript/src/lifecycle-v2.ts`.
+Adapters may consume these contracts but must not redefine their own work or
+run state machines.

@@ -16,7 +16,8 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test:lifecycle": "npm run build && node test/lifecycle-v2.test.mjs"
   },
   "dependencies": {
     "zod": "^3.23.8"
