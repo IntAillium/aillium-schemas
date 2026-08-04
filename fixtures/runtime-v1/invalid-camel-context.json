@@ -1,0 +1,11 @@
+{
+  "contract_version": "1.0",
+  "envelope_id": "fixture-envelope-invalid",
+  "message_type": "TOOL_EXECUTE_REQUEST",
+  "emitted_at": "2026-08-03T12:00:00.000Z",
+  "context": {
+    "contractVersion": "1.0",
+    "tenantId": "tenant-1"
+  },
+  "payload": {}
+}

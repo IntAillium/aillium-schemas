@@ -1,0 +1,85 @@
+{
+  "contract_version": "1.0",
+  "envelope_id": "fixture-envelope-1",
+  "message_type": "TOOL_EXECUTE_REQUEST",
+  "emitted_at": "2026-08-03T12:00:00.000Z",
+  "context": {
+    "contract_version": "1.0",
+    "tenant_id": "tenant-1",
+    "work_order_id": "work-1",
+    "run_id": "run-1",
+    "run_step_id": "step-1",
+    "attempt": 1,
+    "idempotency_key": "work-1:step-1:attempt-1",
+    "fence_token": "42",
+    "checkpoint_cursor": "checkpoint-4",
+    "executor_id": "executor-1",
+    "lease_id": "lease-1",
+    "lease_epoch": 3,
+    "lease_expires_at": "2026-08-03T12:10:00.000Z",
+    "budget": {
+      "deadline_at": "2026-08-03T12:05:00.000Z",
+      "max_duration_ms": 300000,
+      "max_model_calls": 8,
+      "max_tool_calls": 12,
+      "max_retries": 2,
+      "max_revision_count": 3,
+      "max_input_tokens": 20000,
+      "max_output_tokens": 5000,
+      "max_total_tokens": 25000,
+      "max_cost": { "currency": "GBP", "minor_units": 500 },
+      "model_ceilings": [
+        {
+          "provider": "provider-1",
+          "model": "model-1",
+          "max_calls": 8,
+          "max_input_tokens": 20000,
+          "max_output_tokens": 5000,
+          "max_total_tokens": 25000,
+          "max_cost_minor_units": 500
+        }
+      ]
+    },
+    "budget_ledger": {
+      "currency": "GBP",
+      "consumed": {
+        "duration_ms": 0,
+        "model_calls": 0,
+        "tool_calls": 0,
+        "retries": 0,
+        "revisions": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0,
+        "cost_minor_units": 0
+      },
+      "remaining": {
+        "duration_ms": 300000,
+        "model_calls": 8,
+        "tool_calls": 12,
+        "retries": 2,
+        "revisions": 3,
+        "input_tokens": 20000,
+        "output_tokens": 5000,
+        "total_tokens": 25000,
+        "cost_minor_units": 500
+      },
+      "model_consumption": [],
+      "updated_at": "2026-08-03T12:00:00.000Z"
+    }
+  },
+  "payload": {
+    "tenant_id": "tenant-1",
+    "work_order_id": "work-1",
+    "run_id": "run-1",
+    "run_step_id": "step-1",
+    "attempt": 1,
+    "operation_id": "operation-1",
+    "idempotency_key": "work-1:step-1:attempt-1",
+    "fence_token": "42",
+    "tool_name": "calendar.create_event",
+    "input": { "title": "Planning meeting" },
+    "approval_id": "approval-1",
+    "deadline_at": "2026-08-03T12:05:00.000Z"
+  }
+}

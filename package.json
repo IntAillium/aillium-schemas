@@ -6,16 +6,20 @@
     "packages/typescript",
     "packages/python"
   ],
-  "main": "packages/typescript/dist/index.js",
+  "main": "packages/typescript/dist-cjs/index.js",
+  "module": "packages/typescript/dist/index.js",
   "types": "packages/typescript/dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./packages/typescript/dist/index.d.ts",
+      "import": "./packages/typescript/dist/index.js",
+      "require": "./packages/typescript/dist-cjs/index.js",
       "default": "./packages/typescript/dist/index.js"
     }
   },
   "files": [
     "packages/typescript/dist",
+    "packages/typescript/dist-cjs",
     "packages/typescript/package.json",
     "schemas",
     "specs",
@@ -25,6 +29,12 @@
     "AI_GUARDRAILS.md"
   ],
   "scripts": {
-    "prepare": "npm --prefix packages/typescript install && npm --prefix packages/typescript run build"
+    "prepare": "npm --prefix packages/typescript install && npm --prefix packages/typescript run build",
+    "test:runtime": "npm --prefix packages/typescript run test:runtime && python3 -m unittest tests/runtime_v1_roundtrip_test.py -v",
+    "test:contracts": "npm --prefix packages/typescript run test:contracts && python3 -m unittest tests/runtime_v1_roundtrip_test.py -v",
+    "test:packed-consumer": "npm --prefix packages/typescript run build && node scripts/test-packed-consumer.mjs"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
   }
 }

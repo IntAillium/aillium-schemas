@@ -4,20 +4,28 @@
   "description": "Canonical schemas and API contracts for Aillium services.",
   "license": "MIT",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist-cjs/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "dist-cjs"
   ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist-cjs/index.js",
       "default": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test:lifecycle": "npm run build && node test/lifecycle-v2.test.mjs"
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node scripts/write-cjs-package-marker.mjs",
+    "generate:runtime-schema": "npm run build && node scripts/generate-runtime-v1-json-schema.mjs",
+    "check:runtime-schema": "npm run build && node scripts/generate-runtime-v1-json-schema.mjs --check",
+    "test:lifecycle": "npm run build && node test/lifecycle-v2.test.mjs",
+    "test:runtime": "npm run build && node test/runtime-v1.test.mjs",
+    "test:contracts": "npm run build && node scripts/generate-runtime-v1-json-schema.mjs --check && node test/lifecycle-v2.test.mjs && node test/runtime-v1.test.mjs"
   },
   "dependencies": {
     "zod": "^3.23.8"

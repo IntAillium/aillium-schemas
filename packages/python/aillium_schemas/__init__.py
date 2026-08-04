@@ -105,6 +105,12 @@ from .openapi import (
     WorkerResultRequest,
     WorkerResultResponse,
 )
+from .runtime_v1 import (
+    ExecutorLeaseWireEnvelopeV1,
+    ExecutionContextWireV1,
+    RUNTIME_CONTRACT_VERSION,
+    RuntimeWireEnvelopeV1,
+)
 
 __all__ = [
     "ActionEvaluationRequest",
@@ -210,4 +216,8 @@ __all__ = [
     "WorkerResultRequest",
     "WorkerResultResponse",
     "WorkflowExecutionEvent",
+    "ExecutionContextWireV1",
+    "ExecutorLeaseWireEnvelopeV1",
+    "RUNTIME_CONTRACT_VERSION",
+    "RuntimeWireEnvelopeV1",
 ]

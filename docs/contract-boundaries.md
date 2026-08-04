@@ -64,3 +64,60 @@ conversation-to-execution work:
 The TypeScript Zod contracts live in `packages/typescript/src/lifecycle-v2.ts`.
 Adapters may consume these contracts but must not redefine their own work or
 run state machines.
+
+# Provider-neutral runtime v1
+
+The Core-owned `1.0` runtime boundary lives in
+`packages/typescript/src/runtime-v1.ts`. It defines the provider-neutral model
+and tool capability contracts used by durable execution:
+
+- `ExecutionContextWireV1` contains only serializable tenant, work, run, step,
+  attempt, idempotency, fence, checkpoint, executor, active lease, deadline,
+  model ceilings, and consumed/remaining budget-ledger data.
+- `ExecutionContextV1` is process-local and adds an `AbortSignal` only after a
+  wire context is validated. Signals are never serialized or trusted from a
+  worker or adapter.
+- `ModelAdapterV1` normalizes text, usage, native/external tool requests,
+  completion, failure, and cancellation while advertising model capabilities.
+- `ToolAdapterV1` advertises side-effect, approval, cancellation,
+  reconciliation, and idempotency semantics and implements execute, cancel,
+  and reconcile operations.
+- `RuntimeCheckpointV1` records durable state before and after each model or
+  tool boundary, including idempotency, fence, executor, lease, and unresolved
+  side-effect state. Core remains the checkpoint and lifecycle authority.
+- Lease acquire, renew, heartbeat, and loss messages use a separate serializable
+  envelope because acquisition happens before an active execution context
+  exists.
+- Cancellation requests enforce the two-second acknowledgement and five-second
+  forced-stop deadlines. Results carry correlated request, acknowledgement,
+  enforcement, mechanism, and outcome timestamps.
+
+The external tool-request protocol is a strict, bounded JSON object. It is for
+models without native tool calling and does not grant authority: Core still
+validates the tool allowlist, policy, approval, budget, fence, and idempotency
+key before executing an adapter.
+
+Every active runtime wire field uses `snake_case`. The canonical structural
+JSON Schema is `schemas/runtime/provider-neutral-runtime-v1.schema.json`; its
+byte-identical Python package copy and Python-facing round-trip adapter prevent
+language-specific casing drift. The Python adapter uses the generated schema
+to discriminate and fully validate every runtime and lease message payload;
+decoded context, budget, ledger, and payload trees are deeply immutable.
+Zod/Python refinements additionally enforce
+identity equality, deadline chronology, ledger balancing, fencing, and
+reconciliation rules that JSON Schema cannot express by itself.
+
+All integer fields carry explicit generated-schema maxima. Runtime duration is
+bounded to 31 days; attempts and call/retry/revision counts to 1,000,000;
+individual input or output token counts to 1,000,000,000; total tokens to
+2,000,000,000; cost to 1,000,000,000,000 minor units; and monotonic ordinals to
+1,000,000,000,000. These domain limits keep pairwise and 64-model aggregate
+ledger arithmetic exactly representable by JavaScript numbers while remaining
+well above a permitted execution's operational range.
+
+Runtime JSON values are bounded by byte size, depth, and node count. The
+external structured tool protocol uses the narrower 64 KiB and 12-level depth
+limits. The one-MiB global bound applies to the complete model request and wire
+envelope, including all message text. These limits are transport protection
+only; Core must still validate
+the selected tool against the trusted allowlist and approval policy.
