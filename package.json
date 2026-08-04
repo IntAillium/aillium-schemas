@@ -2,6 +2,7 @@
   "name": "@aillium/schemas",
   "version": "0.1.0",
   "private": false,
+  "packageManager": "npm@10.9.3",
   "workspaces": [
     "packages/typescript",
     "packages/python"
