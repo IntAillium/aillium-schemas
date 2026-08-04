@@ -46,8 +46,8 @@ build/
 .env
 .env.*
 
-# Lock files (managed per-package, not at root)
-package-lock.json
+# Root lockfile is committed so git consumers deterministically select npm for
+# the prepare lifecycle; package-level locks remain managed inside each SDK.
 
 # Logs
 *.log
